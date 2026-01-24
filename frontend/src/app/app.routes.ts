@@ -4,30 +4,31 @@ import { authGuard } from './core/guards/auth-guard';
 export const routes: Routes = [
 {
   path: '',
-  loadComponent: () => import('./features/landing/components/landing/landing').then( m =>m.Landing),
+  loadChildren: () => import('./features/landing/landing-module').then( m =>m.LandingModule),
 },
 {
   path: 'auth',
-  children: [
-    {
-      path: 'login',
-      loadComponent: () => import('./features/auth/components/login/login').then(m => m.Login),
-    },
-    {
-      path: 'register',
-      loadComponent: () => import('./features/auth/components/register/register').then(m => m.Register)
-    }
-  ]
+  loadChildren: () => import('./features/auth/auth-module').then(m => m.AuthModule)
 },
 {
   path: 'dashboard',
-  loadComponent: () => import('./features/dashboard/components/dashboard/dashboard').then(m => m.Dashboard),
+  loadChildren: () => import('./features/dashboard/dashboard-module').then(m => m.DashboardModule),
   canActivate: [authGuard]
 },
 {
-  path: 'editor',
-  loadComponent: () => import('./features/editor/components/editor/editor').then(m => m.Editor),
+  path: 'editor/:id',
+  loadChildren: () => import('./features/editor/editor-module').then(m => m.EditorModule),
   canActivate: [authGuard]
+},
+{
+  path: 'workspace',
+  loadChildren: () => import('./features/workspace/workspace-module').then(m => m.WorkspaceModule),
+  canActivate: [authGuard]
+},
+{
+  path: 'analytics',
+  loadChildren: () => import('./features/analytics/analytics-module').then(m => m.AnalyticsModule),
+   canActivate: [authGuard]
 },
 {
   path: '**',
