@@ -1,1 +1,176 @@
-<p>landing works!</p>
+<div class="landing-container">
+  <mat-toolbar class="navbar" color="primary">
+    <div class="navbar-content">
+      <div class="logo">
+        <mat-icon class="logo-icon">article</mat-icon>
+        <span class="logo-text">ContentHub AI</span>
+      </div>
+
+      <div class="nav-actions">
+        <button mat-button routerLink="/auth/login">Sign In</button>
+        <button mat-raised-button color="accent" routerLink="/auth/register">
+          Get Started Free
+        </button>
+      </div>
+    </div>
+  </mat-toolbar>
+
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <mat-chip>✨ Powered by Advanced AI</mat-chip>
+      </div>
+
+      <h1 class="hero-title">
+        Write Better Content,
+        <span class="gradient-text">Faster with AI</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        ContentHub AI helps you create, edit, and collaborate on content with the power
+        of artificial intelligence. Join thousands of content creators who are already
+        working smarter, not harder.
+      </p>
+
+      <div class="hero-actions">
+        <button mat-raised-button color="primary" class="cta-button" routerLink="/auth/register">
+          <mat-icon>rocket_launch</mat-icon>
+          Start Writing for Free
+        </button>
+        <button mat-stroked-button class="demo-button">
+          <mat-icon>play_circle</mat-icon>
+          Watch Demo
+        </button>
+      </div>
+
+      <div class="hero-stats">
+        <div class="stat-item" *ngFor="let stat of stats">
+          <div class="stat-value">{{ stat.value }}</div>
+          <div class="stat-label">{{ stat.label }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-image">
+      <div class="mockup-container">
+        <mat-card class="mockup-card">
+          <mat-card-header>
+            <mat-icon>description</mat-icon>
+            <mat-card-title>AI Writing Assistant</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="mockup-editor">
+              <div class="mockup-line typing-animation"></div>
+              <div class="mockup-line typing-animation delay-1"></div>
+              <div class="mockup-line short typing-animation delay-2"></div>
+            </div>
+            <div class="ai-suggestion">
+              <mat-icon class="ai-icon">auto_awesome</mat-icon>
+              <span>AI suggestion ready...</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="features">
+    <div class="section-header">
+      <h2 class="section-title">Everything You Need to Create Amazing Content</h2>
+      <p class="section-subtitle">
+        Powerful features designed to supercharge your content creation workflow
+      </p>
+    </div>
+
+    <div class="features-grid">
+      <mat-card class="feature-card" *ngFor="let feature of features">
+        <div class="feature-icon-wrapper" [style.background]="feature.color + '15'">
+          <mat-icon class="feature-icon" [style.color]="feature.color">
+            {{ feature.icon }}
+          </mat-icon>
+        </div>
+        <mat-card-header>
+          <mat-card-title>{{ feature.title }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p>{{ feature.description }}</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </section>
+
+
+  <section class="use-cases">
+    <div class="section-header">
+      <h2 class="section-title">Perfect For</h2>
+      <p class="section-subtitle">Trusted by professionals across industries</p>
+    </div>
+
+    <div class="use-cases-grid">
+      <div class="use-case-chip" *ngFor="let useCase of useCases">
+        <mat-icon>{{ useCase.icon }}</mat-icon>
+        <span>{{ useCase.title }}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section">
+    <div class="cta-content">
+      <h2 class="cta-title">Ready to Transform Your Writing?</h2>
+      <p class="cta-subtitle">
+        Join thousands of content creators who are already using AI to write better, faster.
+      </p>
+      <div class="cta-actions">
+        <button mat-raised-button color="accent" class="cta-button-large" routerLink="/auth/register">
+          <mat-icon>rocket_launch</mat-icon>
+          Get Started Free - No Credit Card Required
+        </button>
+      </div>
+      <p class="cta-note">✓ Free forever · ✓ No credit card · ✓ 1000 AI credits/month</p>
+    </div>
+  </section>
+
+
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <div class="footer-logo">
+          <mat-icon>article</mat-icon>
+          <span>ContentHub AI</span>
+        </div>
+        <p class="footer-description">
+          AI-powered content creation platform for modern teams.
+        </p>
+      </div>
+
+      <div class="footer-section">
+        <h4>Product</h4>
+        <a href="#">Features</a>
+        <a href="#">Pricing</a>
+        <a href="#">API</a>
+        <a href="#">Documentation</a>
+      </div>
+
+      <div class="footer-section">
+        <h4>Company</h4>
+        <a href="#">About</a>
+        <a href="#">Blog</a>
+        <a href="#">Careers</a>
+        <a href="#">Contact</a>
+      </div>
+
+      <div class="footer-section">
+        <h4>Legal</h4>
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Security</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2026 ContentHub AI. All rights reserved.</p>
+    </div>
+  </footer>
+</div>
