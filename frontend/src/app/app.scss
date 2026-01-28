@@ -1,0 +1,14 @@
+.global-loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 99999; // Above all of it
+  height: 3px;
+}
+
+//Global app styles
+:host {
+  display: block;
+  min-height: 100vh;
+}

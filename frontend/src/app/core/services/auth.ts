@@ -4,7 +4,7 @@ import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { User, LoginRequest, RegisterRequest , AuthResponse } from '../../models/user.model';
 import { environment } from '../../../environments/environment';
-import { WorkspaceService } from '../../features/workspace/services/workspace';
+// import { WorkspaceService } from '../../features/workspace/services/workspace';
 
 @Injectable({
   providedIn: 'root',
@@ -24,7 +24,7 @@ export class Auth {
   constructor(
   private http: HttpClient,
   private router: Router,
-  private workspaceService: WorkspaceService
+  // private workspaceService: WorkspaceService
   ) {};
 
 
@@ -63,7 +63,7 @@ export class Auth {
     this.currentUserSubject.next(null);
     this.currentUserSignal.set(null);
 
-    this.workspaceService.clearCache();
+    // this.workspaceService.clearCache();
 
     this.router.navigate(['/auth/login']);
   }
