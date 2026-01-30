@@ -149,4 +149,37 @@ export class Auth {
     });
   }
 
+
+
+  // DEVELOPMENT ONLY: Mock login for testing UI WITHOUT backend
+  ///////////////////////////
+  mockLogin(): void {
+    const mockUser: User = {
+      _id: 'mock-user-123',
+      email: 'demo@contenthub.ai',
+      name: 'Demo User',
+      avatar: undefined,
+      aiCredits: {
+        total: 1000,
+        used: 250,
+        resetDate: new Date()
+      },
+      preferences: {
+        theme: 'light',
+        editorFont: 'Arial',
+        defaultTone: 'professional'
+      },
+      createdAt: new Date(),
+      lastLogin: new Date()
+    };
+
+    const mockToken = 'mock-jwt-token-for-development';
+
+    localStorage.setItem(this.TOKEN_KEY, mockToken);
+    localStorage.setItem(this.USER_KEY, JSON.stringify(mockUser));
+    this.currentUserSubject.next(mockUser);
+    this.currentUserSignal.set(mockUser);
+
+    console.log('Mock login successful:', mockUser);
+  }
 }
