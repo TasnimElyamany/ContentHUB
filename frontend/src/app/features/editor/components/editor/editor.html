@@ -1,1 +1,332 @@
-<p>editor works!</p>
+<div class="editor-container">
+  <!-- Top Toolbar -->
+  <mat-toolbar class="editor-toolbar" color="primary">
+    <button mat-icon-button (click)="goBack()" matTooltip="Back to dashboard">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+
+    <input
+      [ngModel]="title()"
+      (ngModelChange)="title.set($event); OnTitleChanged()"
+      class="document-title"
+      placeholder="Untitled Document">
+
+    <span class="spacer"></span>
+
+    <!-- Save Status -->
+    <div class="save-status">
+      <mat-icon [class]="'status-icon ' + saveStatus()">{{ saveStatusIcon }}</mat-icon>
+      <span class="status-text">{{ saveStatusText }}</span>
+    </div>
+
+    <!-- Actions -->
+    <button mat-icon-button [matMenuTriggerFor]="shareMenu" matTooltip="Share">
+      <mat-icon>share</mat-icon>
+    </button>
+    <mat-menu #shareMenu="matMenu">
+      <button mat-menu-item>
+        <mat-icon>link</mat-icon>
+        <span>Copy link</span>
+      </button>
+      <button mat-menu-item>
+        <mat-icon>email</mat-icon>
+        <span>Email</span>
+      </button>
+      <button mat-menu-item>
+        <mat-icon>people</mat-icon>
+        <span>Invite collaborators</span>
+      </button>
+    </mat-menu>
+
+    <button mat-icon-button [matMenuTriggerFor]="exportMenu" matTooltip="Export">
+      <mat-icon>download</mat-icon>
+    </button>
+    <mat-menu #exportMenu="matMenu">
+      <button mat-menu-item (click)="exportDocument('pdf')">
+        <mat-icon>picture_as_pdf</mat-icon>
+        <span>Export as PDF</span>
+      </button>
+      <button mat-menu-item (click)="exportDocument('docx')">
+        <mat-icon>description</mat-icon>
+        <span>Export as DOCX</span>
+      </button>
+      <button mat-menu-item (click)="exportDocument('markdown')">
+        <mat-icon>code</mat-icon>
+        <span>Export as Markdown</span>
+      </button>
+    </mat-menu>
+
+    <button
+      mat-icon-button
+      (click)="toggleComments()"
+      matTooltip="Comments"
+      [matBadge]="comments().length"
+      [matBadgeHidden]="comments().length === 0"
+      matBadgeColor="warn">
+      <mat-icon>comment</mat-icon>
+    </button>
+
+    <button
+      mat-icon-button
+      (click)="toggleAIPanel()"
+      matTooltip="AI Assistant"
+      [class.active]="showAIPanel()">
+      <mat-icon>auto_awesome</mat-icon>
+    </button>
+  </mat-toolbar>
+
+  <!-- Main Editor Area with Sidebars -->
+  <div class="editor-content">
+    <!-- Left Sidebar (Comments) -->
+    @if (showComments()) {
+      <div class="comments-sidebar">
+        <div class="sidebar-header">
+          <h3>Comments</h3>
+          <button mat-icon-button (click)="toggleComments()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+        <div class="sidebar-content">
+          @if (comments().length === 0) {
+            <div class="empty-state">
+              <mat-icon>chat_bubble_outline</mat-icon>
+              <p>No comments yet</p>
+              <small>Select text and add a comment</small>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Editor -->
+    <div class="editor-main">
+      <div class="editor-wrapper">
+        <quill-editor
+          [ngModel]="content()"
+          (ngModelChange)="OnContentChanged({html: $event})"
+          [modules]="quillModules"
+          placeholder="Start writing your amazing content..."
+          class="quill-editor">
+        </quill-editor>
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="editor-footer">
+        <div class="footer-left">
+          <span class="word-count">
+            <mat-icon>text_fields</mat-icon>
+            {{ wordCount }} words
+          </span>
+          <span class="char-count">
+            {{ characterCount }} characters
+          </span>
+        </div>
+        <div class="footer-right">
+          @if (collaborators().length > 0) {
+            <div class="collaborators">
+              <mat-icon>people</mat-icon>
+              <span>{{ collaborators().length }} online</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar (AI Panel) -->
+    @if (showAIPanel()) {
+      <div class="ai-sidebar">
+        <div class="sidebar-header">
+          <div class="header-title">
+            <mat-icon>auto_awesome</mat-icon>
+            <h3>AI Assistant</h3>
+          </div>
+          <button mat-icon-button (click)="toggleAIPanel()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        <mat-tab-group
+          [selectedIndex]="aiPanelTab() === 'generate' ? 0 : aiPanelTab() === 'enhance' ? 1 : 2"
+          (selectedIndexChange)="aiPanelTab.set($event === 0 ? 'generate' : $event === 1 ? 'enhance' : 'research')">
+
+          <!-- Generate Tab -->
+          <mat-tab label="Generate">
+            <div class="tab-content">
+              <p class="tab-description">Generate new content with AI</p>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>What do you want to write about?</mat-label>
+                <textarea
+                  matInput
+                  [ngModel]="aiPrompt()"
+                  (ngModelChange)="aiPrompt.set($event)"
+                  rows="3"
+                  placeholder="E.g., Write about the benefits of remote work..."></textarea>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Tone</mat-label>
+                <mat-select [ngModel]="aiTone()" (ngModelChange)="aiTone.set($event)">
+                  @for (option of toneOptions; track option.value) {
+                    <mat-option [value]="option.value">{{ option.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Length</mat-label>
+                <mat-select [ngModel]="aiLength()" (ngModelChange)="aiLength.set($event)">
+                  @for (option of lengthOptions; track option.value) {
+                    <mat-option [value]="option.value">{{ option.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <button
+                mat-raised-button
+                color="primary"
+                class="full-width"
+                (click)="generateAIContent()"
+                [disabled]="isAIProcessing() || !aiPrompt()">
+                @if (isAIProcessing()) {
+                  <mat-spinner diameter="20"></mat-spinner>
+                  <span>Generating...</span>
+                } @else {
+                  <mat-icon>auto_awesome</mat-icon>
+                  <span>Generate Content</span>
+                }
+              </button>
+
+              @if (aiResult()) {
+                <div class="ai-result">
+                  <div class="result-header">
+                    <span class="result-label">Generated Content:</span>
+                    <div class="result-actions">
+                      <button mat-icon-button (click)="regenerateAI()" matTooltip="Regenerate">
+                        <mat-icon>refresh</mat-icon>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="result-content" [innerHTML]="aiResult()"></div>
+                  <div class="result-footer">
+                    <button mat-stroked-button (click)="copyAIContent()">
+                      <mat-icon>content_copy</mat-icon>
+                      Copy
+                    </button>
+                    <button mat-raised-button color="primary" (click)="insertAIContent()">
+                      <mat-icon>add</mat-icon>
+                      Insert
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          </mat-tab>
+
+          <!-- Enhance Tab -->
+          <mat-tab label="Enhance">
+            <div class="tab-content">
+              <p class="tab-description">Improve your selected text</p>
+
+              @if (selectedText()) {
+                <div class="selected-text-preview">
+                  <span class="label">Selected text:</span>
+                  <p>{{ selectedText() }}</p>
+                </div>
+              } @else {
+                <div class="info-box">
+                  <mat-icon>info</mat-icon>
+                  <p>Select some text in the editor, then click an action below</p>
+                </div>
+              }
+
+              <div class="enhance-actions">
+                <button
+                  mat-stroked-button
+                  class="full-width action-btn"
+                  (click)="enhanceText('improve')"
+                  [disabled]="isAIProcessing()">
+                  <mat-icon>trending_up</mat-icon>
+                  <span>Improve Writing</span>
+                </button>
+
+                <button
+                  mat-stroked-button
+                  class="full-width action-btn"
+                  (click)="enhanceText('grammar')"
+                  [disabled]="isAIProcessing()">
+                  <mat-icon>spellcheck</mat-icon>
+                  <span>Fix Grammar</span>
+                </button>
+
+                <button
+                  mat-stroked-button
+                  class="full-width action-btn"
+                  (click)="enhanceText('shorten')"
+                  [disabled]="isAIProcessing()">
+                  <mat-icon>compress</mat-icon>
+                  <span>Make Shorter</span>
+                </button>
+
+                <button
+                  mat-stroked-button
+                  class="full-width action-btn"
+                  (click)="enhanceText('expand')"
+                  [disabled]="isAIProcessing()">
+                  <mat-icon>expand</mat-icon>
+                  <span>Make Longer</span>
+                </button>
+
+                <button
+                  mat-stroked-button
+                  class="full-width action-btn"
+                  (click)="enhanceText('tone')"
+                  [disabled]="isAIProcessing()">
+                  <mat-icon>palette</mat-icon>
+                  <span>Change Tone</span>
+                </button>
+              </div>
+
+              @if (isAIProcessing()) {
+                <div class="processing-indicator">
+                  <mat-spinner diameter="40"></mat-spinner>
+                  <p>AI is working...</p>
+                </div>
+              }
+
+              @if (aiResult() && !isAIProcessing()) {
+                <div class="ai-result">
+                  <div class="result-header">
+                    <span class="result-label">Enhanced text:</span>
+                  </div>
+                  <div class="result-content">{{ aiResult() }}</div>
+                  <div class="result-footer">
+                    <button mat-stroked-button (click)="copyAIContent()">
+                      <mat-icon>content_copy</mat-icon>
+                      Copy
+                    </button>
+                    <button mat-raised-button color="primary" (click)="replaceSelectedText()">
+                      <mat-icon>swap_horiz</mat-icon>
+                      Replace
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          </mat-tab>
+
+          <!-- Research Tab -->
+          <mat-tab label="Research">
+            <div class="tab-content">
+              <p class="tab-description">Coming soon: AI-powered research</p>
+              <div class="info-box">
+                <mat-icon>construction</mat-icon>
+                <p>This feature is under development</p>
+              </div>
+            </div>
+          </mat-tab>
+        </mat-tab-group>
+      </div>
+    }
+  </div>
+</div>

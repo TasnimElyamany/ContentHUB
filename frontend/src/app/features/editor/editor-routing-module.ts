@@ -1,7 +1,10 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { Editor } from './components/editor/editor';
 
-const routes: Routes = [];
+const routes: Routes = [
+  { path: '', component: Editor }
+];
 
 @NgModule({
   imports: [RouterModule.forChild(routes)],

@@ -55,15 +55,15 @@
     }
 
     input {
-      color: white;
+      color: rgb(80, 71, 82, 0.7);
 
       &::placeholder {
-        color: rgba(255, 255, 255, 0.7);
+        color: rgba(80, 71, 82, 0.7);
       }
     }
 
     mat-icon {
-      color: rgba(255, 255, 255, 0.7);
+      color: rgba(80, 71, 82, 0.7);
     }
   }
 }
