@@ -5,16 +5,17 @@
   margin-bottom: 1rem;
 
   .link {
-    color: #6366f1;
+    color: var(--color-primary);
     text-decoration: none;
 
     &:hover {
+      color: var(--color-primary-dark);
       text-decoration: underline;
     }
   }
 
   .checkbox-error {
-    color: #f44336;
+    color: var(--color-error);
     font-size: 0.75rem;
     margin-top: 0.25rem;
     margin-left: 32px;

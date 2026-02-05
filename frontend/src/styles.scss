@@ -1,17 +1,126 @@
-
-// Include theming for Angular Material with `mat.theme()`.
-// This Sass mixin will define CSS variables that are used for styling Angular Material
-// components according to the Material 3 design spec.
-// Learn more about theming and how to use it for your application's
-// custom components at https://material.angular.dev/guide/theming
 @use '@angular/material' as mat;
+
+
+:root {
+  // Primary
+  --color-primary: #5a6b7d;
+  --color-primary-light: #7a8a9a;
+  --color-primary-dark: #3d4d5c;
+  --color-primary-hover: rgba(90, 107, 125, 0.08);
+  --color-primary-selected: rgba(90, 107, 125, 0.12);
+
+  // Accent
+  --color-accent: #c9863a;
+  --color-accent-light: #e0a85c;
+  --color-accent-dark: #a86d2a;
+
+  // Surfaces
+  --color-surface: #faf9f7;
+  --color-surface-elevated: #ffffff;
+  --color-surface-muted: #f3f2f0;
+  --color-sidebar: #f6f5f3;
+
+  // Text
+  --color-text-primary: #2d2a26;
+  --color-text-secondary: #5c5650;
+  --color-text-muted: #9a9490;
+  --color-text-inverse: #ffffff;
+  --color-text-on-primary: #ffffff;
+  --color-text-on-accent: #ffffff;
+
+  // Borders
+  --color-border: #e5e2de;
+  --color-border-light: #edebe8;
+
+  // Interactive states
+  --color-hover: rgba(45, 42, 38, 0.04);
+  --color-active: rgba(45, 42, 38, 0.08);
+  --color-focus: rgba(90, 107, 125, 0.15);
+  --color-selected: rgba(90, 107, 125, 0.1);
+
+  // Status colors
+  --color-success: #5a9a6e;
+  --color-success-bg: rgba(90, 154, 110, 0.1);
+  --color-warning: #c98a3a;
+  --color-warning-bg: rgba(201, 138, 58, 0.1);
+  --color-error: #b85c5c;
+  --color-error-bg: rgba(184, 92, 92, 0.1);
+  --color-info: #6a8ab0;
+  --color-info-bg: rgba(106, 138, 176, 0.1);
+
+  // Shadows
+  --shadow-sm: 0 1px 3px rgba(45, 42, 38, 0.04);
+  --shadow-md: 0 4px 12px rgba(45, 42, 38, 0.06);
+  --shadow-lg: 0 8px 24px rgba(45, 42, 38, 0.08);
+
+  // Border radius
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  // Transitions
+  --transition-fast: 150ms ease;
+  --transition-normal: 200ms ease;
+}
+
+// Custom Material palette
+$content-hub-primary: (
+  50: #f4f5f7,
+  100: #e4e7eb,
+  200: #c9ced6,
+  300: #a8b1bd,
+  400: #7a8a9a,
+  500: #5a6b7d,
+  600: #4a5968,
+  700: #3d4d5c,
+  800: #2d3a47,
+  900: #1f2830,
+  contrast: (
+    50: #2d2a26,
+    100: #2d2a26,
+    200: #2d2a26,
+    300: #2d2a26,
+    400: #ffffff,
+    500: #ffffff,
+    600: #ffffff,
+    700: #ffffff,
+    800: #ffffff,
+    900: #ffffff,
+  )
+);
+
+$content-hub-accent: (
+  50: #fdf6ef,
+  100: #f9e8d4,
+  200: #f2d4ae,
+  300: #e8ba7e,
+  400: #dfa458,
+  500: #c9863a,
+  600: #a86d2a,
+  700: #8a5622,
+  800: #6c421c,
+  900: #4e3016,
+  contrast: (
+    50: #2d2a26,
+    100: #2d2a26,
+    200: #2d2a26,
+    300: #2d2a26,
+    400: #2d2a26,
+    500: #ffffff,
+    600: #ffffff,
+    700: #ffffff,
+    800: #ffffff,
+    900: #ffffff,
+  )
+);
 
 html {
   height: 100%;
   @include mat.theme((
     color: (
-      primary: mat.$azure-palette,
-      tertiary: mat.$blue-palette,
+      primary: $content-hub-primary,
+      tertiary: $content-hub-accent,
     ),
     typography: Roboto,
     density: 0,
@@ -19,20 +128,209 @@ html {
 }
 
 body {
-  // Default the application to a light color theme. This can be changed to
-  // `dark` to enable the dark color theme, or to `light dark` to defer to the
-  // user's system settings.
   color-scheme: light;
-
-  // Set a default background, font and text colors for the application using
-  // Angular Material's system-level CSS variables. Learn more about these
-  // variables at https://material.angular.dev/guide/system-variables
-  background-color: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-medium);
-
-  // Reset the user agent margin.
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   margin: 0;
   height: 100%;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
-/* You can add global styles to this file, and also import other style files */
+
+// Material component overrides
+.mat-mdc-card {
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-sm) !important;
+  border: 1px solid var(--color-border-light);
+  background: var(--color-surface-elevated) !important;
+}
+
+// Buttons
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-outlined-button,
+.mat-mdc-flat-button {
+  border-radius: var(--radius-md) !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+}
+
+// Primary buttons
+.mat-mdc-raised-button.mat-primary,
+.mat-mdc-flat-button.mat-primary,
+.mat-mdc-unelevated-button.mat-primary {
+  background-color: var(--color-primary) !important;
+  color: var(--color-text-on-primary) !important;
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-primary-dark) !important;
+  }
+}
+
+// Accent buttons
+.mat-mdc-raised-button.mat-accent,
+.mat-mdc-flat-button.mat-accent,
+.mat-mdc-unelevated-button.mat-accent {
+  background-color: var(--color-accent) !important;
+  color: var(--color-text-on-accent) !important;
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-accent-dark) !important;
+  }
+}
+
+// Text/icon buttons - Soft hover states
+.mat-mdc-button:not(.mat-primary):not(.mat-accent):not(.mat-warn),
+.mat-mdc-icon-button:not(.mat-primary):not(.mat-accent):not(.mat-warn) {
+  &:hover:not(:disabled) {
+    background-color: var(--color-hover) !important;
+  }
+
+  &:focus:not(:disabled) {
+    background-color: var(--color-focus) !important;
+  }
+}
+
+// Outlined buttons
+.mat-mdc-outlined-button {
+  border-color: var(--color-border) !important;
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-hover) !important;
+  }
+}
+
+// Toolbar
+.mat-toolbar {
+  background: var(--color-surface-elevated) !important;
+  color: var(--color-text-primary) !important;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mat-toolbar.mat-primary {
+  background: var(--color-primary) !important;
+  color: var(--color-text-inverse) !important;
+  border-bottom: none;
+}
+
+// Sidenav
+.mat-sidenav {
+  background: var(--color-sidebar) !important;
+  border-right: 1px solid var(--color-border) !important;
+}
+
+// List items - Soft hover
+.mat-mdc-list-item {
+  &:hover {
+    background-color: var(--color-hover) !important;
+  }
+
+  &.mdc-list-item--selected,
+  &.mat-mdc-list-item-interactive.mdc-list-item--selected {
+    background-color: var(--color-selected) !important;
+  }
+}
+
+// Menu items
+.mat-mdc-menu-item {
+  &:hover:not(:disabled) {
+    background-color: var(--color-hover) !important;
+  }
+}
+
+// Tabs
+.mat-mdc-tab:not(.mat-mdc-tab-disabled) {
+  &:hover .mdc-tab__ripple::before {
+    opacity: 0.04 !important;
+  }
+}
+
+// Form fields
+.mat-mdc-form-field {
+  .mdc-text-field--focused:not(.mdc-text-field--disabled) {
+    .mdc-floating-label {
+      color: var(--color-primary) !important;
+    }
+  }
+}
+
+// Checkboxes and radios - Softer colors
+.mat-mdc-checkbox.mat-primary,
+.mat-mdc-radio-button.mat-primary {
+  --mdc-checkbox-selected-checkmark-color: #ffffff;
+  --mdc-checkbox-selected-focus-icon-color: var(--color-primary);
+  --mdc-checkbox-selected-hover-icon-color: var(--color-primary-dark);
+  --mdc-checkbox-selected-icon-color: var(--color-primary);
+  --mdc-checkbox-selected-pressed-icon-color: var(--color-primary);
+}
+
+// Chips
+.mat-mdc-chip {
+  border-radius: var(--radius-md) !important;
+
+  &.mat-mdc-chip-selected {
+    background-color: var(--color-primary-selected) !important;
+  }
+}
+
+// Progress indicators
+.mat-mdc-progress-bar {
+  --mdc-linear-progress-active-indicator-color: var(--color-primary);
+}
+
+.mat-mdc-progress-spinner {
+  --mdc-circular-progress-active-indicator-color: var(--color-primary);
+}
+
+// Links
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--color-primary-dark);
+    text-decoration: underline;
+  }
+}
+
+// Selection highlight
+::selection {
+  background: var(--color-primary-selected);
+}
+
+// Scrollbar - Subtle
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+
+  &:hover {
+    background: var(--color-text-muted);
+  }
+}
+
+// Utility classes
+.text-muted {
+  color: var(--color-text-muted) !important;
+}
+
+.text-secondary {
+  color: var(--color-text-secondary) !important;
+}
+
+.bg-surface {
+  background-color: var(--color-surface) !important;
+}
+
+.bg-surface-elevated {
+  background-color: var(--color-surface-elevated) !important;
+}
