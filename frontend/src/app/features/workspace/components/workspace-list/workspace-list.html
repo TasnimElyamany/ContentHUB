@@ -1,0 +1,160 @@
+<div class="workspace-list-container">
+  <mat-toolbar color="primary" class="top-toolbar">
+    <button mat-icon-button (click)="goToDashboard()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+
+    <div class="logo">
+      <mat-icon>workspaces</mat-icon>
+      <span class="logo-text">Workspaces</span>
+    </div>
+
+    <span class="spacer"></span>
+
+    <button mat-icon-button [matMenuTriggerFor]="userMenu">
+      <mat-icon>account_circle</mat-icon>
+    </button>
+    <mat-menu #userMenu="matMenu">
+      <div class="user-menu-header">
+        <div class="user-info">
+          <div class="user-name">{{ currentUser()?.name }}</div>
+          <div class="user-email">{{ currentUser()?.email }}</div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="goToDashboard()">
+        <mat-icon>dashboard</mat-icon>
+        <span>Dashboard</span>
+      </button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Logout</span>
+      </button>
+    </mat-menu>
+  </mat-toolbar>
+
+  <div class="content">
+    <div class="page-header">
+      <div class="header-left">
+        <h1>My Workspaces</h1>
+        <p class="subtitle">Manage your workspaces and collaborate with your team</p>
+      </div>
+      <div class="header-actions">
+        <button mat-raised-button color="primary" (click)="openCreateModal()">
+          <mat-icon>add</mat-icon>
+          New Workspace
+        </button>
+      </div>
+    </div>
+
+    @if (isLoading()) {
+      <div class="loading-container">
+        <mat-spinner diameter="48"></mat-spinner>
+        <p>Loading workspaces...</p>
+      </div>
+    } @else if (error()) {
+      <div class="error-container">
+        <mat-icon class="error-icon">error_outline</mat-icon>
+        <p>{{ error() }}</p>
+        <button mat-raised-button color="primary" (click)="loadWorkspaces()">
+          <mat-icon>refresh</mat-icon>
+          Try Again
+        </button>
+      </div>
+    } @else if (workspaces().length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">workspaces</mat-icon>
+        <h2>No workspaces yet</h2>
+        <p>Create your first workspace to start organizing your content</p>
+        <button mat-raised-button color="primary" (click)="openCreateModal()">
+          <mat-icon>add</mat-icon>
+          Create Workspace
+        </button>
+      </div>
+    } @else {
+      <div class="workspaces-grid">
+        @for (workspace of workspaces(); track workspace._id) {
+          <mat-card class="workspace-card" (click)="openWorkspace(workspace)">
+            <mat-card-header>
+              <div class="workspace-icon-container" mat-card-avatar>
+                <span class="workspace-icon">{{ workspace.icon || '📁' }}</span>
+              </div>
+              <mat-card-title>{{ workspace.name }}</mat-card-title>
+              <mat-card-subtitle>
+                <mat-chip class="role-chip">{{ getWorkspaceRole(workspace) }}</mat-chip>
+              </mat-card-subtitle>
+
+              <button
+                mat-icon-button
+                [matMenuTriggerFor]="workspaceMenu"
+                (click)="$event.stopPropagation()"
+                class="card-menu-btn">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+
+              <mat-menu #workspaceMenu="matMenu">
+                <button mat-menu-item (click)="openWorkspace(workspace)">
+                  <mat-icon>folder_open</mat-icon>
+                  <span>Open</span>
+                </button>
+                @if (isOwner(workspace) || getWorkspaceRole(workspace) === 'Admin') {
+                  <button mat-menu-item (click)="openSettings(workspace, $event)">
+                    <mat-icon>settings</mat-icon>
+                    <span>Settings</span>
+                  </button>
+                }
+                <mat-divider></mat-divider>
+                @if (isOwner(workspace)) {
+                  <button mat-menu-item class="delete-btn" (click)="deleteWorkspace(workspace, $event)">
+                    <mat-icon>delete</mat-icon>
+                    <span>Delete</span>
+                  </button>
+                } @else {
+                  <button mat-menu-item (click)="leaveWorkspace(workspace, $event)">
+                    <mat-icon>exit_to_app</mat-icon>
+                    <span>Leave</span>
+                  </button>
+                }
+              </mat-menu>
+            </mat-card-header>
+
+            <mat-card-content>
+              @if (workspace.description) {
+                <p class="workspace-description">{{ workspace.description }}</p>
+              }
+
+              <div class="workspace-stats">
+                <div class="stat">
+                  <mat-icon>group</mat-icon>
+                  <span>{{ getMemberCount(workspace) }} members</span>
+                </div>
+                <div class="stat">
+                  <mat-icon>schedule</mat-icon>
+                  <span>{{ getRelativeTime(workspace.updatedAt) }}</span>
+                </div>
+              </div>
+            </mat-card-content>
+
+            <mat-card-footer>
+              <div class="workspace-footer">
+                @if (workspace.settings.aiCreditsShared) {
+                  <mat-chip class="setting-chip" matTooltip="AI credits are shared">
+                    <mat-icon>auto_awesome</mat-icon>
+                    Shared AI
+                  </mat-chip>
+                }
+                @if (workspace.settings.requireApproval) {
+                  <mat-chip class="setting-chip" matTooltip="Publishing requires approval">
+                    <mat-icon>approval</mat-icon>
+                    Approval
+                  </mat-chip>
+                }
+              </div>
+            </mat-card-footer>
+          </mat-card>
+        }
+      </div>
+    }
+  </div>
+</div>
