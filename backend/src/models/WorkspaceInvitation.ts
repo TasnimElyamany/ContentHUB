@@ -58,7 +58,6 @@ const WorkspaceInvitationSchema = new Schema<IWorkspaceInvitation>(
 );
 
 
-WorkspaceInvitationSchema.index({ token: 1 });
 WorkspaceInvitationSchema.index({ email: 1, workspaceId: 1 });
 WorkspaceInvitationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
