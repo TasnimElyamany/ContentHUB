@@ -8,6 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { Auth } from '../../../../core/services/auth';
 
 @Component({
@@ -22,7 +23,8 @@ import { Auth } from '../../../../core/services/auth';
     MatInputModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatCheckboxModule
   ],
   templateUrl: './register.html',
   styleUrl: './register.scss',
@@ -44,7 +46,7 @@ export class Register {
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]],
-      agreeTerms: [false, [Validators.requiredTrue]]
+      agreeToTerms: [false, [Validators.requiredTrue]]
     }, { validators: this.passwordsMatchValidator });
   }
 
@@ -62,7 +64,7 @@ export class Register {
     this.isLoading = true;
     this.errorMessage = '';
 
-    const { confirmPassword, agreeTerms, ...registerData } = this.registerForm.value;
+    const { confirmPassword, agreeToTerms, ...registerData } = this.registerForm.value;
 
     this.authService.register(registerData).subscribe({
       next: (response) => {
@@ -91,7 +93,7 @@ export class Register {
       return `${this.capitalizeFirst(fieldName)} must be at least ${requiredLength} characters long`;
     } if (fieldName === 'confirmPassword' && this.registerForm.hasError('passwordsMismatch')) {
       return 'Passwords do not match';
-    } if (fieldName === 'agreeTerms' && !this.registerForm.get('agreeTerms')?.value) {
+    } if (fieldName === 'agreeToTerms' && !this.registerForm.get('agreeToTerms')?.value) {
       return 'You must agree to the terms and conditions';
     }
     return '';
