@@ -7,6 +7,11 @@ import { Auth } from '../../../core/services/auth';
 import { WORKSPACE_ROLE_HIERARCHY } from '../../../models/workspace.constants';
 import { getUserRole , canPerformAction } from '../../../models/workspace.helpers';
 
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -74,18 +79,18 @@ export class WorkspaceService {
   }
 
   getMyWorkspaces(): Observable<Workspace[]> {
-    return this.http.get<Workspace[]>(this.API_URL).pipe(
-      map(workspaces => {
-        this.workspacesCache = workspaces;
-        return workspaces;
+    return this.http.get<ApiResponse<Workspace[]>>(this.API_URL).pipe(
+      map(response => {
+        this.workspacesCache = response.data;
+        return response.data;
       })
     );
   }
 
-
   getWorkspace(id: string): Observable<Workspace> {
-    return this.http.get<Workspace>(`${this.API_URL}/${id}`).pipe(
-      map(workspace => {
+    return this.http.get<ApiResponse<Workspace>>(`${this.API_URL}/${id}`).pipe(
+      map(response => {
+        const workspace = response.data;
         const index = this.workspacesCache.findIndex(w => w._id === id);
         if (index !== -1) {
           this.workspacesCache[index] = workspace;
@@ -97,50 +102,46 @@ export class WorkspaceService {
     );
   }
 
-
   createWorkspace(data: CreateWorkspaceRequest): Observable<Workspace> {
-    return this.http.post<Workspace>(this.API_URL, data).pipe(
-      map(workspace => {
-        this.workspacesCache.push(workspace);
-        return workspace;
+    return this.http.post<ApiResponse<Workspace>>(this.API_URL, data).pipe(
+      map(response => {
+        this.workspacesCache.push(response.data);
+        return response.data;
       })
     );
   }
-
 
   updateWorkspace(id: string, data: Partial<Workspace>): Observable<Workspace> {
-    return this.http.put<Workspace>(`${this.API_URL}/${id}`, data).pipe(
-      map(workspace => {
+    return this.http.put<ApiResponse<Workspace>>(`${this.API_URL}/${id}`, data).pipe(
+      map(response => {
         const index = this.workspacesCache.findIndex(w => w._id === id);
         if (index !== -1) {
-          this.workspacesCache[index] = workspace;
+          this.workspacesCache[index] = response.data;
         }
-        return workspace;
+        return response.data;
       })
     );
   }
 
-
   deleteWorkspace(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.API_URL}/${id}`).pipe(
+    return this.http.delete<ApiResponse<void>>(`${this.API_URL}/${id}`).pipe(
       map(() => {
         this.workspacesCache = this.workspacesCache.filter(w => w._id !== id);
       })
     );
   }
 
-
   inviteMember(workspaceId: string, data: InviteMemberRequest): Observable<Workspace> {
-    return this.http.post<Workspace>(
+    return this.http.post<ApiResponse<Workspace>>(
       `${this.API_URL}/${workspaceId}/invite`,
       data
     ).pipe(
-      map(workspace => {
+      map(response => {
         const index = this.workspacesCache.findIndex(w => w._id === workspaceId);
         if (index !== -1) {
-          this.workspacesCache[index] = workspace;
+          this.workspacesCache[index] = response.data;
         }
-        return workspace;
+        return response.data;
       })
     );
   }
@@ -150,32 +151,30 @@ export class WorkspaceService {
     userId: string,
     role: 'admin' | 'editor' | 'viewer'
   ): Observable<Workspace> {
-    return this.http.put<Workspace>(
+    return this.http.put<ApiResponse<Workspace>>(
       `${this.API_URL}/${workspaceId}/members/${userId}`,
       { role }
     ).pipe(
-      map(workspace => {
-        // Update cache
+      map(response => {
         const index = this.workspacesCache.findIndex(w => w._id === workspaceId);
         if (index !== -1) {
-          this.workspacesCache[index] = workspace;
+          this.workspacesCache[index] = response.data;
         }
-        return workspace;
+        return response.data;
       })
     );
   }
 
-
   removeMember(workspaceId: string, userId: string): Observable<Workspace> {
-    return this.http.delete<Workspace>(
+    return this.http.delete<ApiResponse<Workspace>>(
       `${this.API_URL}/${workspaceId}/members/${userId}`
     ).pipe(
-      map(workspace => {
+      map(response => {
         const index = this.workspacesCache.findIndex(w => w._id === workspaceId);
         if (index !== -1) {
-          this.workspacesCache[index] = workspace;
+          this.workspacesCache[index] = response.data;
         }
-        return workspace;
+        return response.data;
       })
     );
   }
@@ -186,7 +185,7 @@ export class WorkspaceService {
       throw new Error('User not authenticated');
     }
 
-    return this.http.post<void>(
+    return this.http.post<ApiResponse<void>>(
       `${this.API_URL}/${workspaceId}/leave`,
       {}
     ).pipe(
@@ -197,9 +196,9 @@ export class WorkspaceService {
   }
 
   getWorkspaceMembers(workspaceId: string): Observable<WorkspaceMember[]> {
-    return this.http.get<WorkspaceMember[]>(
+    return this.http.get<ApiResponse<WorkspaceMember[]>>(
       `${this.API_URL}/${workspaceId}/members`
-    );
+    ).pipe(map(response => response.data));
   }
 
 

@@ -41,13 +41,10 @@ export class Login {
   errorMessage = '';
   hidePassword = true;
 
-  // Dev Flag
-  devMode = true;
-
   constructor() {
     this.loginForm = this.fb.group({
-      email: ['demo@contenthub.ai', [Validators.required, Validators.email]],
-      password: ['password123', [Validators.required, Validators.minLength(6)]],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
       rememberMe: [false]
     });
   }
@@ -61,34 +58,21 @@ export class Login {
     this.isLoading = true;
     this.errorMessage = '';
 
-    if (this.devMode) {
-      //mock login flow
-      console.log('DEV MODE: Using mock login');
-      this.authService.mockLogin();
-
-      setTimeout(() => {
-        this.isLoading = false;
+    this.authService.login(this.loginForm.value).subscribe({
+      next: (response) => {
+        console.log('Login successful:', response);
         const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
         this.router.navigate([returnUrl]);
-      }, 500);
-    } else {
-      // real login flow
-      this.authService.login(this.loginForm.value).subscribe({
-        next: (response) => {
-          console.log('Login successful:', response);
-          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
-          this.router.navigate([returnUrl]);
-        },
-        error: (error) => {
-          this.isLoading = false;
-          this.errorMessage = error.error?.message || 'Login failed. Please check your credentials.';
-          console.error('Login error:', error);
-        },
-        complete: () => {
-          this.isLoading = false;
-        }
-      });
-    }
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.errorMessage = error.error?.message || 'Login failed. Please check your credentials.';
+        console.error('Login error:', error);
+      },
+      complete: () => {
+        this.isLoading = false;
+      }
+    });
   }
 
   getErrorMessage(fieldName: string): string {
