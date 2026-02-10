@@ -1,0 +1,92 @@
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  mat-icon {
+    color: #3f51b5;
+  }
+}
+
+.message-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  &.error {
+    background-color: #ffebee;
+    color: #c62828;
+  }
+
+  &.success {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+.role-option {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+
+  .role-label {
+    font-weight: 500;
+  }
+
+  .role-description {
+    font-size: 0.75rem;
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+.info-note {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  background-color: #e3f2fd;
+  border-radius: 8px;
+  margin-top: 16px;
+
+  mat-icon {
+    color: #1976d2;
+    flex-shrink: 0;
+  }
+
+  span {
+    font-size: 0.875rem;
+    color: rgba(0, 0, 0, 0.7);
+    line-height: 1.5;
+  }
+}
+
+mat-dialog-content {
+  min-width: 400px;
+  max-width: 500px;
+}
+
+mat-dialog-actions {
+  padding: 16px 24px;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    mat-spinner {
+      margin-right: 8px;
+    }
+  }
+}

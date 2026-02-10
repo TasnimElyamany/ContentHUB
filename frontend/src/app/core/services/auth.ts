@@ -1,10 +1,14 @@
 import { Injectable , signal} from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, tap, map } from 'rxjs';
 import { Router } from '@angular/router';
 import { User, LoginRequest, RegisterRequest , AuthResponse } from '../../models/user.model';
 import { environment } from '../../../environments/environment';
-import { WorkspaceService } from '../../features/workspace/services/workspace';
+
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -24,7 +28,7 @@ export class Auth {
   constructor(
   private http: HttpClient,
   private router: Router,
-  private workspaceService: WorkspaceService
+  // private workspaceService: WorkspaceService
   ) {};
 
 
@@ -40,18 +44,20 @@ export class Auth {
   }
 
   login(credentials: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/auth/login`, credentials)
+    return this.http.post<ApiResponse<AuthResponse>>(`${this.API_URL}/auth/login`, credentials)
       .pipe(
-        tap(response => {
-          this.setSession(response);
+        map(response => response.data),
+        tap(data => {
+          this.setSession(data);
         })
       );
   }
   register(userData: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/auth/register`, userData)
+    return this.http.post<ApiResponse<AuthResponse>>(`${this.API_URL}/auth/register`, userData)
       .pipe(
-        tap(response => {
-          this.setSession(response);
+        map(response => response.data),
+        tap(data => {
+          this.setSession(data);
         })
       );
   }
@@ -63,7 +69,7 @@ export class Auth {
     this.currentUserSubject.next(null);
     this.currentUserSignal.set(null);
 
-    this.workspaceService.clearCache();
+    // this.workspaceService.clearCache();
 
     this.router.navigate(['/auth/login']);
   }
@@ -74,8 +80,9 @@ export class Auth {
 
 //Refresh user data from server
   refreshUserData(): Observable<User> {
-    return this.http.get<User>(`${this.API_URL}/auth/me`)
+    return this.http.get<ApiResponse<User>>(`${this.API_URL}/auth/me`)
       .pipe(
+        map(response => response.data),
         tap(user => {
           localStorage.setItem(this.USER_KEY, JSON.stringify(user));
           this.currentUserSubject.next(user);
@@ -120,8 +127,9 @@ export class Auth {
   }
 
   updateProfile(userData: Partial<User>): Observable<User> {
-    return this.http.put<User>(`${this.API_URL}/auth/profile`, userData)
+    return this.http.put<ApiResponse<User>>(`${this.API_URL}/auth/profile`, userData)
       .pipe(
+        map(response => response.data),
         tap(user => {
           localStorage.setItem(this.USER_KEY, JSON.stringify(user));
           this.currentUserSubject.next(user);
@@ -149,4 +157,37 @@ export class Auth {
     });
   }
 
+
+
+  // DEVELOPMENT ONLY: Mock login for testing UI WITHOUT backend
+  ///////////////////////////
+  mockLogin(): void {
+    const mockUser: User = {
+      _id: 'mock-user-123',
+      email: 'demo@contenthub.ai',
+      name: 'Demo User',
+      avatar: undefined,
+      aiCredits: {
+        total: 1000,
+        used: 250,
+        resetDate: new Date()
+      },
+      preferences: {
+        theme: 'light',
+        editorFont: 'Arial',
+        defaultTone: 'professional'
+      },
+      createdAt: new Date(),
+      lastLogin: new Date()
+    };
+
+    const mockToken = 'mock-jwt-token-for-development';
+
+    localStorage.setItem(this.TOKEN_KEY, mockToken);
+    localStorage.setItem(this.USER_KEY, JSON.stringify(mockUser));
+    this.currentUserSubject.next(mockUser);
+    this.currentUserSignal.set(mockUser);
+
+    console.log('Mock login successful:', mockUser);
+  }
 }

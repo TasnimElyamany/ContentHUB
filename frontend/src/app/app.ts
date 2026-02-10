@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -15,7 +15,7 @@ import { Auth } from './core/services/auth';
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
-export class App {
+export class App implements  OnInit {
   title = 'ContentHUB';
 
   loadingService = inject(LoadingService);
@@ -26,12 +26,12 @@ export class App {
   }
 
   private checkAuthentication(): void {
-    if (this.authService.isAuthenticated) {
-      this.authService.refreshUserData().subscribe();
-      console.log('User is authenticated, data refreshed.');
-    }
-    else {
-      console.log('User is not authenticated.');
+    if (this.authService.isAuthenticated && !this.authService.isTokenExpired()) {
+      this.authService.refreshUserData().subscribe({
+        error: () => {
+          console.warn('Could not refresh user data. Using cached session.');
+        }
+      });
     }
   }
 

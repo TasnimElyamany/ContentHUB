@@ -16,6 +16,9 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
 
         switch (error.status) {
+          case 0:
+            errorMessage = 'Network error. Could not reach the server.';
+            break;
           case 401:
             router.navigate(['/auth/login']);
             errorMessage = 'Unauthorized. Please login again.';

@@ -1,1 +1,92 @@
-<p>invite-modal works!</p>
+<h2 mat-dialog-title>
+  <mat-icon>person_add</mat-icon>
+  Invite to {{ data.workspace.name }}
+</h2>
+
+<mat-dialog-content>
+  @if (error) {
+    <div class="message-banner error">
+      <mat-icon>error</mat-icon>
+      <span>{{ error }}</span>
+    </div>
+  }
+
+  @if (success) {
+    <div class="message-banner success">
+      <mat-icon>check_circle</mat-icon>
+      <span>{{ success }}</span>
+    </div>
+  }
+
+  <form [formGroup]="form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Email Address</mat-label>
+      <input
+        matInput
+        formControlName="email"
+        type="email"
+        placeholder="colleague@example.com" />
+      <mat-icon matPrefix>email</mat-icon>
+      @if (form.get('email')?.hasError('required')) {
+        <mat-error>Email is required</mat-error>
+      }
+      @if (form.get('email')?.hasError('email')) {
+        <mat-error>Please enter a valid email</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Role</mat-label>
+      <mat-select formControlName="role">
+        @for (role of roles; track role.value) {
+          <mat-option [value]="role.value">
+            <div class="role-option">
+              <span class="role-label">{{ role.label }}</span>
+              <span class="role-description">{{ role.description }}</span>
+            </div>
+          </mat-option>
+        }
+      </mat-select>
+      <mat-icon matPrefix>badge</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Personal Message (optional)</mat-label>
+      <textarea
+        matInput
+        formControlName="message"
+        placeholder="Add a personal note to your invitation..."
+        rows="3"></textarea>
+      <mat-icon matPrefix>message</mat-icon>
+      @if (form.get('message')?.hasError('maxlength')) {
+        <mat-error>Message cannot exceed 200 characters</mat-error>
+      }
+    </mat-form-field>
+  </form>
+
+  <div class="info-note">
+    <mat-icon>info</mat-icon>
+    <span>
+      The invited user will receive an email with instructions to join this workspace.
+      If they don't have an account, they'll be prompted to create one.
+    </span>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()" [disabled]="isSubmitting">Cancel</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="submit()"
+    [disabled]="form.invalid || isSubmitting">
+    @if (isSubmitting) {
+      <mat-spinner diameter="20"></mat-spinner>
+    } @else {
+      <ng-container>
+        <mat-icon>send</mat-icon>
+        Send Invitation
+      </ng-container>
+    }
+  </button>
+</mat-dialog-actions>

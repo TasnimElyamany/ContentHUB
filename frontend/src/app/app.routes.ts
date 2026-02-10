@@ -18,7 +18,7 @@ export const routes: Routes = [
 {
   path: 'editor/:id',
   loadChildren: () => import('./features/editor/editor-module').then(m => m.EditorModule),
-  canActivate: [authGuard]
+  // canActivate: [authGuard]
 },
 {
   path: 'workspace',

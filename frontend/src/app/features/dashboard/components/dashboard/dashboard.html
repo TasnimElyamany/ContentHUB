@@ -1,1 +1,262 @@
-<p>dashboard works!</p>
+<div class="dashboard-container">
+  <mat-toolbar color="primary" class="top-toolbar">
+    <button mat-icon-button (click)="isSidenavOpen = !isSidenavOpen">
+      <mat-icon>menu</mat-icon>
+    </button>
+
+    <div class="logo">
+      <mat-icon>article</mat-icon>
+      <span class="logo-text">ContentHub AI</span>
+    </div>
+
+    <span class="spacer"></span>
+
+    <mat-form-field class="search-field" appearance="outline">
+      <mat-icon matPrefix>search</mat-icon>
+      <input
+        matInput
+        placeholder="Search documents..."
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="searchQuery.set($event)">
+    </mat-form-field>
+
+    <!-- User Menu -->
+    <button mat-icon-button [matMenuTriggerFor]="userMenu">
+      <mat-icon>account_circle</mat-icon>
+    </button>
+    <mat-menu #userMenu="matMenu">
+      <div class="user-menu-header">
+        <div class="user-info">
+          <div class="user-name">{{ currentUser()?.name }}</div>
+          <div class="user-email">{{ currentUser()?.email }}</div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+      <button mat-menu-item>
+        <mat-icon>settings</mat-icon>
+        <span>Settings</span>
+      </button>
+      <button mat-menu-item>
+        <mat-icon>help</mat-icon>
+        <span>Help</span>
+      </button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Logout</span>
+      </button>
+    </mat-menu>
+  </mat-toolbar>
+
+  <!-- Main-->
+  <mat-sidenav-container class="sidenav-container">
+    <mat-sidenav
+      #sidenav
+      [opened]="isSidenavOpen"
+      mode="side"
+      class="sidenav">
+
+      <div class="stats-section">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <mat-icon>description</mat-icon>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">{{ stats.totalDocuments }}</div>
+            <div class="stat-label">Total Docs</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon accent">
+            <mat-icon>auto_awesome</mat-icon>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">{{ stats.aiCreditsUsed }}/{{ stats.aiCreditsTotal }}</div>
+            <div class="stat-label">AI Credits</div>
+          </div>
+        </div>
+      </div>
+
+      <mat-nav-list>
+        <h3 mat-subheader>Navigation</h3>
+
+        <a mat-list-item>
+          <mat-icon matListItemIcon>home</mat-icon>
+          <span matListItemTitle>All Documents</span>
+          <span matListItemMeta class="badge">{{ stats.totalDocuments }}</span>
+        </a>
+
+        <a mat-list-item>
+          <mat-icon matListItemIcon>edit_note</mat-icon>
+          <span matListItemTitle>Drafts</span>
+          <span matListItemMeta class="badge accent">{{ stats.drafts }}</span>
+        </a>
+
+        <a mat-list-item>
+          <mat-icon matListItemIcon>publish</mat-icon>
+          <span matListItemTitle>Published</span>
+          <span matListItemMeta class="badge">{{ stats.published }}</span>
+        </a>
+
+        <a mat-list-item>
+          <mat-icon matListItemIcon>star</mat-icon>
+          <span matListItemTitle>Favorites</span>
+        </a>
+
+        <mat-divider></mat-divider>
+
+        <h3 mat-subheader>Workspaces</h3>
+
+        @for (workspace of workspaces(); track workspace._id) {
+          <a
+            mat-list-item
+            [class.active]="selectedWorkspace()?._id === workspace._id"
+            (click)="selectWorkspace(workspace)">
+            <span matListItemIcon class="workspace-icon">{{ workspace.icon }}</span>
+            <span matListItemTitle>{{ workspace.name }}</span>
+          </a>
+        }
+
+        <a mat-list-item routerLink="/workspace" class="manage-workspaces-btn">
+          <mat-icon matListItemIcon>settings</mat-icon>
+          <span matListItemTitle>Manage Workspaces</span>
+        </a>
+      </mat-nav-list>
+    </mat-sidenav>
+
+    <mat-sidenav-content class="main-content">
+      <div class="content-header">
+        <div class="header-left">
+          <h1>
+            @if (selectedWorkspace()) {
+              <span class="workspace-icon">{{ selectedWorkspace()?.icon }}</span>
+            }
+            {{ selectedWorkspace()?.name || 'All Documents' }}
+          </h1>
+          <p class="subtitle">{{ filteredDocuments.length }} documents</p>
+        </div>
+
+        <div class="header-actions">
+          <mat-chip-set>
+            <mat-chip
+              [highlighted]="filterStatus() === 'all'"
+              (click)="filterStatus.set('all')">
+              All
+            </mat-chip>
+            <mat-chip
+              [highlighted]="filterStatus() === 'draft'"
+              (click)="filterStatus.set('draft')">
+              Drafts
+            </mat-chip>
+            <mat-chip
+              [highlighted]="filterStatus() === 'published'"
+              (click)="filterStatus.set('published')">
+              Published
+            </mat-chip>
+          </mat-chip-set>
+
+          <button
+            mat-icon-button
+            (click)="toggleViewMode()"
+            [matTooltip]="viewMode() === 'grid' ? 'List View' : 'Grid View'">
+            <mat-icon>{{ viewMode() === 'grid' ? 'view_list' : 'view_module' }}</mat-icon>
+          </button>
+
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="createDocument()"
+            class="create-btn">
+            <mat-icon>add</mat-icon>
+            New Document
+          </button>
+        </div>
+      </div>
+
+      <div [class]="'documents-container documents-' + viewMode()">
+        @if (filteredDocuments.length === 0) {
+          <div class="empty-state">
+            <mat-icon class="empty-icon">description</mat-icon>
+            <h2>No documents found</h2>
+            <p>Create your first document to get started</p>
+            <button mat-raised-button color="primary" (click)="createDocument()">
+              <mat-icon>add</mat-icon>
+              Create Document
+            </button>
+          </div>
+        } @else {
+          @for (doc of filteredDocuments; track doc._id) {
+            <mat-card
+              class="document-card"
+              (click)="openDocument(doc._id)">
+              <mat-card-header>
+                <mat-icon mat-card-avatar>description</mat-icon>
+                <mat-card-title>{{ doc.title }}</mat-card-title>
+                <mat-card-subtitle>
+                  {{ getRelativeTime(doc.updatedAt) }}
+                </mat-card-subtitle>
+
+                <button
+                  mat-icon-button
+                  [matMenuTriggerFor]="docMenu"
+                  (click)="$event.stopPropagation()"
+                  class="card-menu-btn">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+
+                <mat-menu #docMenu="matMenu">
+                  <button mat-menu-item (click)="openDocument(doc._id)">
+                    <mat-icon>edit</mat-icon>
+                    <span>Edit</span>
+                  </button>
+                  <button mat-menu-item>
+                    <mat-icon>share</mat-icon>
+                    <span>Share</span>
+                  </button>
+                  <button mat-menu-item>
+                    <mat-icon>file_copy</mat-icon>
+                    <span>Duplicate</span>
+                  </button>
+                  <mat-divider></mat-divider>
+                  <button mat-menu-item (click)="deleteDocument(doc._id, $event)" class="delete-btn">
+                    <mat-icon>delete</mat-icon>
+                    <span>Delete</span>
+                  </button>
+                </mat-menu>
+              </mat-card-header>
+
+              <mat-card-content>
+                <p class="document-preview">{{ getDocumentPreview(doc.content) }}</p>
+
+                <div class="document-meta">
+                  <mat-chip-set>
+                    @for (tag of doc.tags.slice(0, 3); track tag) {
+                      <mat-chip class="tag-chip">{{ tag }}</mat-chip>
+                    }
+                  </mat-chip-set>
+                </div>
+              </mat-card-content>
+
+              <mat-card-footer>
+                <div class="document-footer">
+                  <div class="footer-left">
+                    <mat-chip [color]="getStatusColor(doc.status)">
+                      {{ doc.status }}
+                    </mat-chip>
+                  </div>
+                  <div class="footer-right">
+                    <span class="ai-usage" matTooltip="AI tokens used">
+                      <mat-icon>auto_awesome</mat-icon>
+                      {{ doc.aiUsage.totalTokens }}
+                    </span>
+                  </div>
+                </div>
+              </mat-card-footer>
+            </mat-card>
+          }
+        }
+      </div>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>

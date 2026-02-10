@@ -1,1 +1,187 @@
-<p>workspace-settings works!</p>
+<div class="workspace-settings-container">
+  <mat-toolbar color="primary" class="top-toolbar">
+    <button mat-icon-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+
+    <div class="logo">
+      <mat-icon>settings</mat-icon>
+      <span class="logo-text">Workspace Settings</span>
+    </div>
+
+    <span class="spacer"></span>
+
+    <button mat-icon-button [matMenuTriggerFor]="userMenu">
+      <mat-icon>account_circle</mat-icon>
+    </button>
+    <mat-menu #userMenu="matMenu">
+      <div class="user-menu-header">
+        <div class="user-info">
+          <div class="user-name">{{ currentUser()?.name }}</div>
+          <div class="user-email">{{ currentUser()?.email }}</div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Logout</span>
+      </button>
+    </mat-menu>
+  </mat-toolbar>
+
+  @if (isLoading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p>Loading settings...</p>
+    </div>
+  } @else if (error()) {
+    <div class="error-container">
+      <mat-icon class="error-icon">error_outline</mat-icon>
+      <p>{{ error() }}</p>
+      <button mat-raised-button color="primary" (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+        Go Back
+      </button>
+    </div>
+  } @else {
+    <div class="content">
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <mat-card class="settings-card">
+          <mat-card-header>
+            <mat-card-title>General Settings</mat-card-title>
+            <mat-card-subtitle>Basic workspace information</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="icon-selector">
+              <label>Workspace Icon</label>
+              <div class="icons-grid">
+                @for (icon of icons; track icon) {
+                  <button
+                    type="button"
+                    class="icon-btn"
+                    [class.selected]="selectedIcon === icon"
+                    (click)="selectIcon(icon)">
+                    {{ icon }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Workspace Name</mat-label>
+              <input matInput formControlName="name" />
+              @if (form.get('name')?.hasError('required')) {
+                <mat-error>Name is required</mat-error>
+              }
+              @if (form.get('name')?.hasError('minlength')) {
+                <mat-error>Name must be at least 2 characters</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Description</mat-label>
+              <textarea
+                matInput
+                formControlName="description"
+                rows="3"
+                placeholder="What's this workspace for?"></textarea>
+            </mat-form-field>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="settings-card">
+          <mat-card-header>
+            <mat-card-title>Collaboration Settings</mat-card-title>
+            <mat-card-subtitle>Configure how team members work together</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="setting-item">
+              <div class="setting-info">
+                <mat-icon>auto_awesome</mat-icon>
+                <div>
+                  <span class="setting-label">Share AI Credits</span>
+                  <span class="setting-description">Pool AI credits across all workspace members</span>
+                </div>
+              </div>
+              <mat-slide-toggle formControlName="aiCreditsShared"></mat-slide-toggle>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <mat-icon>public</mat-icon>
+                <div>
+                  <span class="setting-label">Allow Public Sharing</span>
+                  <span class="setting-description">Members can share documents publicly</span>
+                </div>
+              </div>
+              <mat-slide-toggle formControlName="allowPublicSharing"></mat-slide-toggle>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <mat-icon>approval</mat-icon>
+                <div>
+                  <span class="setting-label">Require Approval</span>
+                  <span class="setting-description">Documents need approval before publishing</span>
+                </div>
+              </div>
+              <mat-slide-toggle formControlName="requireApproval"></mat-slide-toggle>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <mat-icon>comment</mat-icon>
+                <div>
+                  <span class="setting-label">Allow Guest Comments</span>
+                  <span class="setting-description">Non-members can comment on shared documents</span>
+                </div>
+              </div>
+              <mat-slide-toggle formControlName="allowGuestComments"></mat-slide-toggle>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <div class="actions-bar">
+          <button mat-button type="button" (click)="goBack()">Cancel</button>
+          <button
+            mat-raised-button
+            color="primary"
+            type="submit"
+            [disabled]="form.invalid || isSaving()">
+            @if (isSaving()) {
+              <mat-spinner diameter="20"></mat-spinner>
+            } @else {
+              <ng-container>
+                <mat-icon>save</mat-icon>
+                Save Changes
+              </ng-container>
+            }
+          </button>
+        </div>
+
+        @if (isOwner()) {
+          <mat-card class="settings-card danger-zone">
+            <mat-card-header>
+              <mat-card-title>Danger Zone</mat-card-title>
+              <mat-card-subtitle>Irreversible actions</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="danger-item">
+                <div class="danger-info">
+                  <span class="danger-label">Delete Workspace</span>
+                  <span class="danger-description">
+                    Permanently delete this workspace and all its documents. This cannot be undone.
+                  </span>
+                </div>
+                <button mat-raised-button color="warn" type="button" (click)="deleteWorkspace()">
+                  <mat-icon>delete_forever</mat-icon>
+                  Delete Workspace
+                </button>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        }
+      </form>
+    </div>
+  }
+</div>

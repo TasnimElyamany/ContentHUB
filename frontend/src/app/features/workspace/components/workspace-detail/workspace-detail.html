@@ -1,0 +1,190 @@
+<div class="workspace-detail-container">
+  <mat-toolbar color="primary" class="top-toolbar">
+    <button mat-icon-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+
+    <div class="logo">
+      @if (workspace()) {
+        <span class="workspace-icon">{{ workspace()?.icon || '📁' }}</span>
+      }
+      <span class="logo-text">{{ workspace()?.name || 'Workspace' }}</span>
+    </div>
+
+    <span class="spacer"></span>
+
+    @if (canManage()) {
+      <button mat-icon-button matTooltip="Invite members" (click)="openInviteModal()">
+        <mat-icon>person_add</mat-icon>
+      </button>
+      <button mat-icon-button matTooltip="Settings" (click)="openSettings()">
+        <mat-icon>settings</mat-icon>
+      </button>
+    }
+
+    <button mat-icon-button [matMenuTriggerFor]="userMenu">
+      <mat-icon>account_circle</mat-icon>
+    </button>
+    <mat-menu #userMenu="matMenu">
+      <div class="user-menu-header">
+        <div class="user-info">
+          <div class="user-name">{{ currentUser()?.name }}</div>
+          <div class="user-email">{{ currentUser()?.email }}</div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="goToDashboard()">
+        <mat-icon>dashboard</mat-icon>
+        <span>Dashboard</span>
+      </button>
+      <button mat-menu-item (click)="goBack()">
+        <mat-icon>workspaces</mat-icon>
+        <span>All Workspaces</span>
+      </button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Logout</span>
+      </button>
+    </mat-menu>
+  </mat-toolbar>
+
+  @if (isLoading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p>Loading workspace...</p>
+    </div>
+  } @else if (error()) {
+    <div class="error-container">
+      <mat-icon class="error-icon">error_outline</mat-icon>
+      <p>{{ error() }}</p>
+      <button mat-raised-button color="primary" (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+        Back to Workspaces
+      </button>
+    </div>
+  } @else {
+    <div class="content">
+      <div class="workspace-header">
+        <div class="header-info">
+          <div class="workspace-icon-large">{{ workspace()?.icon || '📁' }}</div>
+          <div class="header-text">
+            <h1>{{ workspace()?.name }}</h1>
+            @if (workspace()?.description) {
+              <p class="description">{{ workspace()?.description }}</p>
+            }
+            <div class="workspace-meta">
+              <span class="meta-item">
+                <mat-icon>group</mat-icon>
+                {{ getMemberCount() }} members
+              </span>
+              <span class="meta-item">
+                <mat-icon>description</mat-icon>
+                {{ documents().length }} documents
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="header-actions">
+          @if (canEdit()) {
+            <button mat-raised-button color="primary" (click)="createDocument()">
+              <mat-icon>add</mat-icon>
+              New Document
+            </button>
+          }
+        </div>
+      </div>
+
+      <mat-tab-group [(selectedIndex)]="activeTab" class="workspace-tabs">
+        <mat-tab label="Documents">
+          <div class="tab-content">
+            @if (documents().length === 0) {
+              <div class="empty-state">
+                <mat-icon class="empty-icon">description</mat-icon>
+                <h2>No documents yet</h2>
+                <p>Create your first document in this workspace</p>
+                @if (canEdit()) {
+                  <button mat-raised-button color="primary" (click)="createDocument()">
+                    <mat-icon>add</mat-icon>
+                    Create Document
+                  </button>
+                }
+              </div>
+            } @else {
+              <div class="documents-grid">
+                @for (doc of documents(); track doc._id) {
+                  <mat-card class="document-card" (click)="openDocument(doc._id)">
+                    <mat-card-header>
+                      <mat-icon mat-card-avatar>description</mat-icon>
+                      <mat-card-title>{{ doc.title }}</mat-card-title>
+                      <mat-card-subtitle>{{ getRelativeTime(doc.updatedAt) }}</mat-card-subtitle>
+                    </mat-card-header>
+                    <mat-card-content>
+                      <p class="document-preview">{{ getDocumentPreview(doc.content) }}</p>
+                      <div class="document-tags">
+                        @for (tag of doc.tags.slice(0, 3); track tag) {
+                          <mat-chip class="tag-chip">{{ tag }}</mat-chip>
+                        }
+                      </div>
+                    </mat-card-content>
+                    <mat-card-footer>
+                      <mat-chip [color]="doc.status === 'published' ? 'primary' : 'accent'">
+                        {{ doc.status }}
+                      </mat-chip>
+                    </mat-card-footer>
+                  </mat-card>
+                }
+              </div>
+            }
+          </div>
+        </mat-tab>
+
+        <mat-tab label="Members">
+          <div class="tab-content">
+            <div class="members-header">
+              <h3>Team Members</h3>
+              @if (canManage()) {
+                <button mat-raised-button color="primary" (click)="openInviteModal()">
+                  <mat-icon>person_add</mat-icon>
+                  Invite Member
+                </button>
+              }
+            </div>
+            <div class="members-list">
+              <!-- Owner -->
+              <div class="member-item">
+                <div class="member-avatar">
+                  <mat-icon>person</mat-icon>
+                </div>
+                <div class="member-info">
+                  <span class="member-name">
+                    {{ isOwner() ? currentUser()?.name + ' (You)' : 'Workspace Owner' }}
+                  </span>
+                  <span class="member-email">{{ isOwner() ? currentUser()?.email : '' }}</span>
+                </div>
+                <mat-chip class="role-chip owner">Owner</mat-chip>
+              </div>
+
+              <!-- Members -->
+              @for (member of workspace()?.members; track member.userId) {
+                <div class="member-item">
+                  <div class="member-avatar">
+                    <mat-icon>person</mat-icon>
+                  </div>
+                  <div class="member-info">
+                    <span class="member-name">
+                      {{ member.user?.name || 'Team Member' }}
+                      {{ member.userId === currentUser()?._id ? '(You)' : '' }}
+                    </span>
+                    <span class="member-email">{{ member.user?.email || '' }}</span>
+                  </div>
+                  <mat-chip class="role-chip">{{ member.role }}</mat-chip>
+                </div>
+              }
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+  }
+</div>
