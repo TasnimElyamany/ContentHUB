@@ -44,7 +44,7 @@ export class Register {
     this.registerForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
+      password: ['', [Validators.required, Validators.minLength(8)]],
       confirmPassword: ['', [Validators.required]],
       agreeToTerms: [false, [Validators.requiredTrue]]
     }, { validators: this.passwordsMatchValidator });
@@ -73,7 +73,7 @@ export class Register {
       },
       error: (error) => {
         this.isLoading = false;
-        this.errorMessage = error.error?.message || 'Registration failed. Please try again.';
+        this.errorMessage = error.error?.error || error.error?.message || 'Registration failed. Please try again.';
         console.error('Registration error:', error);
       },
       complete: () => {
