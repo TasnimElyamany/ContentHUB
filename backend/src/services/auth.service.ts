@@ -9,6 +9,8 @@ import {
   UpdateProfileInput,
   ChangePasswordInput,
 } from '../schemas/auth.schema';
+import { emailService } from './email.service';
+import { logger } from '../utils/logger';
 
 class AuthService {
   async register(data: RegisterInput): Promise<{ token: string; user: Partial<IUser> }> {
@@ -125,9 +127,13 @@ class AuthService {
     user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
     await user.save({ validateBeforeSave: false });
 
-    // In production, send email with reset link
-    // For now, return the token (remove in production)
-    return resetToken;
+    try {
+      await emailService.sendPasswordResetEmail(user.email, resetToken);
+    } catch (error) {
+      logger.error('Failed to send reset email, logging token for dev:', resetToken);
+    }
+
+    return 'If the email exists, a reset link has been sent';
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {

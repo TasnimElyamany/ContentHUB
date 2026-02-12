@@ -20,6 +20,7 @@ import { debounceTime, takeUntil } from 'rxjs/operators';
 
 import { Auth } from '../../../../core/services/auth';
 import { DocumentService } from '../../../dashboard/services/document';
+import { AiService } from '../../services/ai';
 import { Document } from '../../../../models/document.model';
 
 @Component({
@@ -49,6 +50,7 @@ export class Editor implements OnInit, OnDestroy {
   private router = inject(Router);
   private authService = inject(Auth);
   private documentService = inject(DocumentService);
+  private aiService = inject(AiService);
 
   private destroy$ = new Subject<void>();
   private saveSubject$ = new Subject<void>();
@@ -64,12 +66,14 @@ export class Editor implements OnInit, OnDestroy {
   showAIPanel = signal<boolean>(false);
   aiPanelTab = signal<'generate' | 'enhance' | 'research'>('generate');
   isAIProcessing = signal<boolean>(false);
+  aiError = signal<string>('');
 
   aiPrompt = signal<string>('');
-  aiTone = signal<string>('Professional');
-  aiLength = signal<string>('Medium');
+  aiTone = signal<string>('professional');
+  aiLength = signal<string>('medium');
   selectedText = signal<string>('');
   aiResult = signal<string>('');
+  aiCreditsRemaining = signal<number | null>(null);
 
   showComments = signal<boolean>(false);
   comments = signal<any[]>([]);
@@ -99,7 +103,6 @@ export class Editor implements OnInit, OnDestroy {
     { value: 'professional', label: 'Professional' },
     { value: 'casual', label: 'Casual' },
     { value: 'friendly', label: 'Friendly' },
-    { value: 'formal', label: 'Formal' },
     { value: 'creative', label: 'Creative' },
   ];
 
@@ -227,6 +230,9 @@ export class Editor implements OnInit, OnDestroy {
 
   toggleAIPanel(): void {
     this.showAIPanel.update((value) => !value);
+    if (this.showAIPanel() && this.aiCreditsRemaining() === null) {
+      this.loadAICredits();
+    }
   }
 
   toggleComments(): void {
@@ -237,30 +243,52 @@ export class Editor implements OnInit, OnDestroy {
     this.aiPanelTab.set(tab);
   }
 
+  loadAICredits(): void {
+    this.aiService.getCredits().subscribe({
+      next: (credits) => {
+        this.aiCreditsRemaining.set(credits.remaining);
+      },
+      error: (err) => {
+        console.error('Failed to load AI credits:', err);
+      },
+    });
+  }
+
   generateAIContent(): void {
     if (!this.aiPrompt()) {
       alert('Please enter a prompt for the AI.');
       return;
     }
+
+    const docId = this.documentId();
+    if (!docId || docId === 'new') {
+      alert('Please save the document first before using AI features.');
+      return;
+    }
+
     this.isAIProcessing.set(true);
     this.aiResult.set('');
+    this.aiError.set('');
 
-    // TODO: Connect to real AI service
-    setTimeout(() => {
-      const mockResult = this.getMockAIResponse();
-      this.aiResult.set(mockResult);
-      this.isAIProcessing.set(false);
-    }, 3000);
-  }
-
-  getMockAIResponse(): string {
-    const responses = [
-      '<p>Artificial Intelligence is revolutionizing the way we create content. With advanced language models, writers can now generate high-quality text in seconds, allowing them to focus on creativity and strategy rather than tedious writing tasks.</p><p>Modern AI writing assistants can understand context, maintain consistent tone, and even adapt to different writing styles. This technology is becoming an indispensable tool for content creators, marketers, and businesses worldwide.</p>',
-      '<p>The future of content creation is here, and it\'s powered by AI. Imagine being able to draft an entire article, generate creative ideas, or polish your writing with just a few clicks. That\'s the reality we\'re living in today.</p><p>AI-powered writing tools are not replacing human creativity; they\'re enhancing it. By handling the heavy lifting of initial drafts and suggestions, these tools free up writers to focus on what truly matters: crafting compelling narratives and connecting with their audience.</p>',
-      '<p>In today\'s fast-paced digital world, content is king. But creating engaging, high-quality content consistently can be challenging. That\'s where AI writing assistants come in, offering a powerful solution to overcome writer\'s block and boost productivity.</p><p>These intelligent tools can help you brainstorm ideas, structure your thoughts, improve grammar, and even adjust tone to match your audience. The result? Better content, created faster, with less effort.</p>',
-    ];
-
-    return responses[Math.floor(Math.random() * responses.length)];
+    this.aiService
+      .generate({
+        prompt: this.aiPrompt(),
+        tone: this.aiTone() as 'professional' | 'casual' | 'creative' | 'friendly',
+        length: this.aiLength() as 'short' | 'medium' | 'long',
+        documentId: docId,
+      })
+      .subscribe({
+        next: (response) => {
+          this.aiResult.set(response.result);
+          this.aiCreditsRemaining.set(response.creditsRemaining);
+          this.isAIProcessing.set(false);
+        },
+        error: (err) => {
+          console.error('AI generation error:', err);
+          this.aiError.set(err.error?.error || err.error?.message || 'AI generation failed. Please try again.');
+          this.isAIProcessing.set(false);
+        },
+      });
   }
 
   insertAIContent(): void {
@@ -296,66 +324,39 @@ export class Editor implements OnInit, OnDestroy {
       alert('Please select some text to enhance.');
       return;
     }
+
+    const docId = this.documentId();
+    if (!docId || docId === 'new') {
+      alert('Please save the document first before using AI features.');
+      return;
+    }
+
     this.selectedText.set(selectedText);
     this.isAIProcessing.set(true);
     this.aiResult.set('');
+    this.aiError.set('');
 
-    // TODO: Connect to real AI service
-    setTimeout(() => {
-      let enhanced = selectedText;
-      switch (action) {
-        case 'improve':
-          enhanced = this.improveText(selectedText);
-          break;
-        case 'grammar':
-          enhanced = this.fixGrammar(selectedText);
-          break;
-        case 'shorten':
-          enhanced = this.shortenText(selectedText);
-          break;
-        case 'expand':
-          enhanced = this.expandText(selectedText);
-          break;
-        case 'tone':
-          enhanced = this.changeTone(selectedText);
-          break;
-      }
-      this.aiResult.set(enhanced);
-      this.isAIProcessing.set(false);
-    }, 3000);
-  }
-
-  improveText(text: string): string {
-    return text.replace(/\b(\w+)\b/g, (match) => {
-      const improvements: { [key: string]: string } = {
-        good: 'excellent',
-        bad: 'poor',
-        very: 'extremely',
-        nice: 'wonderful',
-      };
-      return improvements[match.toLowerCase()] || match;
-    });
-  }
-
-  fixGrammar(text: string): string {
-    return text + ' (grammar corrected)';
-  }
-
-  shortenText(text: string): string {
-    const words = text.split(' ');
-    return words.slice(0, Math.floor(words.length / 2)).join(' ') + '...';
-  }
-
-  expandText(text: string): string {
-    return (
-      text +
-      ' Furthermore, this concept can be elaborated with additional context and detailed explanations to provide readers with a comprehensive understanding of the topic at hand.'
-    );
-  }
-
-  changeTone(text: string): string {
-    const tone = this.aiTone();
-    return `[${tone.toUpperCase()} TONE]: ${text}`;
+    this.aiService
+      .enhance({
+        text: selectedText,
+        action: action as 'improve' | 'grammar' | 'shorten' | 'expand' | 'tone',
+        tone: action === 'tone'
+          ? (this.aiTone() as 'professional' | 'casual' | 'friendly')
+          : undefined,
+        documentId: docId,
+      })
+      .subscribe({
+        next: (response) => {
+          this.aiResult.set(response.result);
+          this.aiCreditsRemaining.set(response.creditsRemaining);
+          this.isAIProcessing.set(false);
+        },
+        error: (err) => {
+          console.error('AI enhance error:', err);
+          this.aiError.set(err.error?.error || err.error?.message || 'AI enhancement failed. Please try again.');
+          this.isAIProcessing.set(false);
+        },
+      });
   }
 
   replaceSelectedText(): void {

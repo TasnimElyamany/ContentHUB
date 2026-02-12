@@ -1,9 +1,12 @@
+import Groq from 'groq-sdk';
 import { User, ContentDocument, AIUsage } from '../models';
 import { ApiError } from '../utils/apiError';
 import { AIGenerateInput, AIEnhanceInput } from '../schemas/ai.schema';
 import { config } from '../config';
+import { logger } from '../utils/logger';
 
-// Simulated AI responses for dev/testing
+const groq = new Groq({ apiKey: config.ai.groqApiKey });
+
 class AIService {
   async generate(
     userId: string,
@@ -23,8 +26,7 @@ class AIService {
       throw ApiError.notFound('Document not found');
     }
 
-    // Generate content (mock implementation for now)
-    const result = await this.callAI('generate', data.prompt, data.tone, data.length);
+    const result = await this.callGroqGenerate(data.prompt, data.tone, data.length);
     const tokensUsed = this.calculateTokens(result);
 
     user.aiCredits.used += creditsNeeded;
@@ -39,7 +41,7 @@ class AIService {
       documentId: data.documentId,
       workspaceId: document.workspace,
       action: 'generate',
-      provider: 'mock',
+      provider: 'groq',
       tokensUsed,
       prompt: data.prompt,
       response: result,
@@ -61,7 +63,7 @@ class AIService {
       throw ApiError.notFound('User not found');
     }
 
-    const creditsNeeded = 10; // Fixed cost for enhancement
+    const creditsNeeded = 10;
     if (user.aiCredits.used + creditsNeeded > user.aiCredits.total) {
       throw ApiError.tooManyRequests('Insufficient AI credits');
     }
@@ -71,8 +73,7 @@ class AIService {
       throw ApiError.notFound('Document not found');
     }
 
-    // Enhance content (mock implementation)
-    const result = await this.callEnhanceAI(data.text, data.action, data.tone);
+    const result = await this.callGroqEnhance(data.text, data.action, data.tone);
     const tokensUsed = this.calculateTokens(result);
 
     user.aiCredits.used += creditsNeeded;
@@ -87,7 +88,7 @@ class AIService {
       documentId: data.documentId,
       workspaceId: document.workspace,
       action: data.action,
-      provider: 'mock',
+      provider: 'groq',
       tokensUsed,
       prompt: data.text,
       response: result,
@@ -119,53 +120,79 @@ class AIService {
     };
   }
 
-  // Mock AI call - replace with actual API in production
-  private async callAI(
-    type: string,
+  private async callGroqGenerate(
     prompt: string,
     tone: string,
     length: string
   ): Promise<string> {
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const maxTokens = {
+      short: 300,
+      medium: 600,
+      long: 1200,
+    }[length] || 600;
 
-    const toneModifier = {
-      professional: 'In a professional manner, ',
-      casual: 'Casually speaking, ',
-      creative: 'Creatively put, ',
-      friendly: 'In a friendly tone, ',
-    }[tone] || '';
+    const systemPrompt = `You are a professional content writer. Generate high-quality content based on the user's prompt.
+Write in a ${tone} tone. Return the content as clean HTML using <p>, <h2>, <h3>, <ul>, <li>, <strong>, and <em> tags as appropriate.
+Do not include any markdown formatting. Do not wrap the response in code blocks.`;
 
-    const lengthMultiplier = {
-      short: 1,
-      medium: 2,
-      long: 3,
-    }[length] || 1;
+    try {
+      const completion = await groq.chat.completions.create({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: prompt },
+        ],
+        max_tokens: maxTokens,
+        temperature: tone === 'creative' ? 0.9 : 0.7,
+      });
 
-    const baseResponse = `${toneModifier}here is generated content based on your prompt: "${prompt}". `;
-    return baseResponse.repeat(lengthMultiplier);
+      const result = completion.choices[0]?.message?.content;
+      if (!result) {
+        throw new Error('No response from AI');
+      }
+      return result;
+    } catch (error: any) {
+      logger.error('Groq generate error:', error);
+      throw ApiError.internal(`AI generation failed: ${error.message}`);
+    }
   }
 
-  // Mock enhance AI call
-  private async callEnhanceAI(
+  private async callGroqEnhance(
     text: string,
     action: string,
     tone?: string
   ): Promise<string> {
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    const actionPrompts: Record<string, string> = {
+      improve: `Improve the following text to make it clearer, more engaging, and better written. Keep the same meaning and approximate length.`,
+      grammar: `Fix all grammar, spelling, and punctuation errors in the following text. Keep the original meaning and style intact.`,
+      shorten: `Shorten the following text to roughly half its length while preserving the key points and meaning.`,
+      expand: `Expand the following text with more detail, examples, and context. Make it roughly twice as long.`,
+      tone: `Rewrite the following text in a ${tone || 'professional'} tone. Keep the same meaning and information.`,
+    };
 
-    switch (action) {
-      case 'improve':
-        return `Improved: ${text}`;
-      case 'grammar':
-        return text.charAt(0).toUpperCase() + text.slice(1);
-      case 'shorten':
-        return text.split(' ').slice(0, Math.ceil(text.split(' ').length / 2)).join(' ');
-      case 'expand':
-        return `${text} Additionally, this topic encompasses several important aspects worth exploring.`;
-      case 'tone':
-        return `[${tone || 'professional'} tone] ${text}`;
-      default:
-        return text;
+    const systemPrompt = `You are a professional editor. ${actionPrompts[action] || actionPrompts.improve}
+Return only the improved text as clean HTML using <p>, <strong>, and <em> tags as appropriate.
+Do not include any markdown formatting or code blocks. Do not add any commentary or explanations.`;
+
+    try {
+      const completion = await groq.chat.completions.create({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: text },
+        ],
+        max_tokens: 1000,
+        temperature: 0.5,
+      });
+
+      const result = completion.choices[0]?.message?.content;
+      if (!result) {
+        throw new Error('No response from AI');
+      }
+      return result;
+    } catch (error: any) {
+      logger.error('Groq enhance error:', error);
+      throw ApiError.internal(`AI enhancement failed: ${error.message}`);
     }
   }
 

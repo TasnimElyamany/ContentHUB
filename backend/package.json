@@ -10,6 +10,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@types/nodemailer": "^7.0.9",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
@@ -19,6 +20,7 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.0.0",
+    "nodemailer": "^8.0.1",
     "socket.io": "^4.7.2",
     "winston": "^3.11.0",
     "zod": "^3.22.4"
