@@ -37,6 +37,7 @@ export class Register {
   registerForm: FormGroup;
   isLoading = false;
   errorMessage = '';
+  successMessage = '';
   hidePassword = true;
   hideConfirmPassword = true;
 
@@ -69,7 +70,8 @@ export class Register {
     this.authService.register(registerData).subscribe({
       next: (response) => {
         console.log('Registration successful:', response);
-        this.router.navigate(['/auth/login']);
+        this.isLoading = false;
+        this.successMessage = 'Account created! Please check your email to verify your account.';
       },
       error: (error) => {
         this.isLoading = false;

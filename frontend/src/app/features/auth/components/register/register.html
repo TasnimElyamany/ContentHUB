@@ -17,7 +17,21 @@
         </div>
       }
 
-      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
+      @if (successMessage) {
+        <div class="success-alert">
+          <mat-icon>mark_email_read</mat-icon>
+          <div>
+            <span>{{ successMessage }}</span>
+          </div>
+        </div>
+        <div class="auth-footer" style="margin-top: 1.5rem;">
+          <p>
+            <a routerLink="/auth/login" class="link-primary">Go to Sign In</a>
+          </p>
+        </div>
+      }
+
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form" [class.hidden]="successMessage">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Full Name</mat-label>
           <input
@@ -117,17 +131,19 @@
         </button>
       </form>
 
-      <!-- Divider -->
-      <div class="divider">
-        <span>or</span>
-      </div>
+      @if (!successMessage) {
+        <!-- Divider -->
+        <div class="divider">
+          <span>or</span>
+        </div>
 
-      <!-- Sign In -->
-      <div class="auth-footer">
-        <p>Already have an account?
-          <a routerLink="/auth/login" class="link-primary">Sign in</a>
-        </p>
-      </div>
+        <!-- Sign In -->
+        <div class="auth-footer">
+          <p>Already have an account?
+            <a routerLink="/auth/login" class="link-primary">Sign in</a>
+          </p>
+        </div>
+      }
     </mat-card>
 
     <div class="back-link">

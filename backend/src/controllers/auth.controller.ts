@@ -73,3 +73,21 @@ export const resetPassword = asyncHandler(async (req: Request, res: Response) =>
     message: 'Password reset successfully',
   });
 });
+
+export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
+  await authService.verifyEmail(req.body.token);
+
+  res.json({
+    success: true,
+    message: 'Email verified successfully',
+  });
+});
+
+export const resendVerification = asyncHandler(async (req: Request, res: Response) => {
+  const message = await authService.resendVerification(req.body.email);
+
+  res.json({
+    success: true,
+    message,
+  });
+});
