@@ -145,6 +145,13 @@
           </button>
         </div>
 
+        @if (aiCreditsRemaining() !== null) {
+          <div class="ai-credits">
+            <mat-icon>toll</mat-icon>
+            <span>{{ aiCreditsRemaining() }} credits remaining</span>
+          </div>
+        }
+
         <mat-tab-group
           [selectedIndex]="aiPanelTab() === 'generate' ? 0 : aiPanelTab() === 'enhance' ? 1 : 2"
           (selectedIndexChange)="aiPanelTab.set($event === 0 ? 'generate' : $event === 1 ? 'enhance' : 'research')">
@@ -196,6 +203,13 @@
                   <span>Generate Content</span>
                 }
               </button>
+
+              @if (aiError()) {
+                <div class="ai-error">
+                  <mat-icon>error_outline</mat-icon>
+                  <span>{{ aiError() }}</span>
+                </div>
+              }
 
               @if (aiResult()) {
                 <div class="ai-result">
@@ -291,6 +305,13 @@
                 <div class="processing-indicator">
                   <mat-spinner diameter="40"></mat-spinner>
                   <p>AI is working...</p>
+                </div>
+              }
+
+              @if (aiError() && !isAIProcessing()) {
+                <div class="ai-error">
+                  <mat-icon>error_outline</mat-icon>
+                  <span>{{ aiError() }}</span>
                 </div>
               }
 
