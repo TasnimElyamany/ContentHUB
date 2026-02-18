@@ -8,27 +8,34 @@
     <input
       [ngModel]="title()"
       (ngModelChange)="title.set($event); OnTitleChanged()"
+      (focus)="onTitleFocus($event)"
+      (blur)="onTitleBlur()"
       class="document-title"
       placeholder="Untitled Document">
 
     <span class="spacer"></span>
 
     <!-- Save Status -->
-    <div class="save-status">
+    <button
+      mat-button
+      class="save-btn"
+      (click)="saveDocument()"
+      [disabled]="saveStatus() === 'saving'"
+      matTooltip="Save (Ctrl+S)">
       <mat-icon [class]="'status-icon ' + saveStatus()">{{ saveStatusIcon }}</mat-icon>
       <span class="status-text">{{ saveStatusText }}</span>
-    </div>
+    </button>
 
     <!-- Actions -->
     <button mat-icon-button [matMenuTriggerFor]="shareMenu" matTooltip="Share">
       <mat-icon>share</mat-icon>
     </button>
     <mat-menu #shareMenu="matMenu">
-      <button mat-menu-item>
+      <button mat-menu-item (click)="copyDocumentLink()">
         <mat-icon>link</mat-icon>
         <span>Copy link</span>
       </button>
-      <button mat-menu-item>
+      <button mat-menu-item (click)="shareDocument()">
         <mat-icon>email</mat-icon>
         <span>Email</span>
       </button>
@@ -60,8 +67,8 @@
       mat-icon-button
       (click)="toggleComments()"
       matTooltip="Comments"
-      [matBadge]="comments().length"
-      [matBadgeHidden]="comments().length === 0"
+      [matBadge]="commentCount()"
+      [matBadgeHidden]="commentCount() === 0"
       matBadgeColor="warn">
       <mat-icon>comment</mat-icon>
     </button>
@@ -86,15 +93,10 @@
             <mat-icon>close</mat-icon>
           </button>
         </div>
-        <div class="sidebar-content">
-          @if (comments().length === 0) {
-            <div class="empty-state">
-              <mat-icon>chat_bubble_outline</mat-icon>
-              <p>No comments yet</p>
-              <small>Select text and add a comment</small>
-            </div>
-          }
-        </div>
+        <app-comments-sidebar
+          [documentId]="documentId()"
+          (countChange)="onCommentCountChange($event)">
+        </app-comments-sidebar>
       </div>
     }
 
@@ -104,6 +106,7 @@
         <quill-editor
           [ngModel]="content()"
           (ngModelChange)="OnContentChanged({html: $event})"
+          (onEditorCreated)="onEditorCreated($event)"
           [modules]="quillModules"
           placeholder="Start writing your amazing content..."
           class="quill-editor">
@@ -196,11 +199,15 @@
                 (click)="generateAIContent()"
                 [disabled]="isAIProcessing() || !aiPrompt()">
                 @if (isAIProcessing()) {
-                  <mat-spinner diameter="20"></mat-spinner>
-                  <span>Generating...</span>
+                  <ng-container>
+                    <mat-spinner diameter="20"></mat-spinner>
+                    <span>Generating...</span>
+                  </ng-container>
                 } @else {
-                  <mat-icon>auto_awesome</mat-icon>
-                  <span>Generate Content</span>
+                  <ng-container>
+                    <mat-icon>auto_awesome</mat-icon>
+                    <span>Generate Content</span>
+                  </ng-container>
                 }
               </button>
 

@@ -296,7 +296,8 @@ a {
 
 // Selection highlight
 ::selection {
-  background: var(--color-primary-selected);
+  background: rgba(59, 130, 246, 0.28);
+  color: inherit;
 }
 
 // Scrollbar - Subtle

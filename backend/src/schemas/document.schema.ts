@@ -6,7 +6,7 @@ export const createDocumentSchema = z.object({
       .string()
       .min(1, 'Title is required')
       .max(200, 'Title must be less than 200 characters'),
-    workspaceId: z.string().min(1, 'Workspace ID is required'),
+    workspaceId: z.string().optional(),
     content: z.string().optional(),
   }),
 });

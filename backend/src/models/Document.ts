@@ -10,7 +10,7 @@ export interface IDocument extends MongoDocument {
   title: string;
   content: string;
   owner: mongoose.Types.ObjectId;
-  workspace: mongoose.Types.ObjectId;
+  workspace?: mongoose.Types.ObjectId;
   collaborators: ICollaborator[];
   status: 'draft' | 'published' | 'archived';
   tags: string[];
@@ -43,7 +43,8 @@ const DocumentSchema = new Schema<IDocument>(
     workspace: {
       type: Schema.Types.ObjectId,
       ref: 'Workspace',
-      required: true,
+      required: false,
+      default: null,
     },
     collaborators: [
       {
