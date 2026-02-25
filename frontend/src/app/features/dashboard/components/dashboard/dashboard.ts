@@ -29,7 +29,7 @@ import { User } from '../../../../models/user.model';
 import {
   ConfirmDialogComponent,
   ConfirmDialogData,
-} from '../confirm-dialog/confirm-dialog';
+} from '../../../../shared/components/confirm-dialog/confirm-dialog';
 
 @Component({
   selector: 'app-dashboard',
