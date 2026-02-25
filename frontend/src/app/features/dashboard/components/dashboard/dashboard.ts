@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -15,6 +15,9 @@ import { MatListModule } from '@angular/material/list';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { FormsModule } from '@angular/forms';
 
 import { Auth } from '../../../../core/services/auth';
@@ -23,6 +26,10 @@ import { DocumentService } from '../../services/document';
 import { Document } from '../../../../models/document.model';
 import { Workspace } from '../../../../models/workspace.model';
 import { User } from '../../../../models/user.model';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogData,
+} from '../confirm-dialog/confirm-dialog';
 
 @Component({
   selector: 'app-dashboard',
@@ -43,6 +50,9 @@ import { User } from '../../../../models/user.model';
     MatBadgeModule,
     MatTooltipModule,
     MatProgressSpinnerModule,
+    MatDividerModule,
+    MatDialogModule,
+    MatSnackBarModule,
     FormsModule,
   ],
   standalone: true,
@@ -54,59 +64,22 @@ export class Dashboard implements OnInit {
   private workspaceService = inject(WorkspaceService);
   private documentService = inject(DocumentService);
   private router = inject(Router);
+  private dialog = inject(MatDialog);
+  private snackbar = inject(MatSnackBar);
 
   currentUser = signal<User | null>(null);
-
   workspaces = signal<Workspace[]>([]);
   documents = signal<Document[]>([]);
   selectedWorkspace = signal<Workspace | null>(null);
   isLoading = signal(true);
+  loadError = signal<string | null>(null);
 
-  searchQuery = signal<string>('');
-  filterStatus = signal<string>('all');
+  searchQuery = signal('');
+  filterStatus = signal('all');
   viewMode = signal<'grid' | 'list'>('grid');
-  isSidenavOpen = true;
+  isSidenavOpen = signal(true);
 
-  ngOnInit(): void {
-    this.loadUserData();
-    this.loadWorkspaces();
-  }
-
-  loadUserData(): void {
-    this.currentUser.set(this.authService.currentUserValue);
-  }
-
-  loadWorkspaces(): void {
-    this.isLoading.set(true);
-    this.workspaceService.getMyWorkspaces().subscribe({
-      next: (workspaces) => {
-        this.workspaces.set(workspaces);
-        if (workspaces.length > 0) {
-          this.selectedWorkspace.set(workspaces[0]);
-        }
-        this.loadDocuments();
-      },
-      error: (err) => {
-        console.error('Failed to load workspaces:', err);
-        this.isLoading.set(false);
-      },
-    });
-  }
-
-  loadDocuments(): void {
-    this.documentService.getDocuments().subscribe({
-      next: (response) => {
-        this.documents.set(response.documents);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        console.error('Failed to load documents:', err);
-        this.isLoading.set(false);
-      },
-    });
-  }
-
-  get filteredDocuments(): Document[] {
+  filteredDocuments = computed(() => {
     let filtered = this.documents();
 
     if (this.selectedWorkspace()) {
@@ -119,28 +92,75 @@ export class Dashboard implements OnInit {
       filtered = filtered.filter((doc) => doc.status === this.filterStatus());
     }
 
-    if (this.searchQuery()) {
-      const query = this.searchQuery().toLowerCase();
+    const q = this.searchQuery().trim().toLowerCase();
+    if (q) {
       filtered = filtered.filter(
         (doc) =>
-          doc.title.toLowerCase().includes(query) ||
-          doc.content.toLowerCase().includes(query) ||
-          doc.tags.some((tag) => tag.toLowerCase().includes(query))
+          doc.title.toLowerCase().includes(q) ||
+          doc.content.replace(/<[^>]*>/g, '').toLowerCase().includes(q) ||
+          doc.tags.some((tag) => tag.toLowerCase().includes(q))
       );
     }
 
     return filtered;
-  }
+  });
 
-  get stats() {
+  stats = computed(() => {
     const allDocs = this.documents();
+    const used = this.currentUser()?.aiCredits.used ?? 0;
+    const total = this.currentUser()?.aiCredits.total ?? 1000;
     return {
       totalDocuments: allDocs.length,
-      drafts: allDocs.filter((doc) => doc.status === 'draft').length,
-      published: allDocs.filter((doc) => doc.status === 'published').length,
-      aiCreditsUsed: this.currentUser()?.aiCredits.used || 0,
-      aiCreditsTotal: this.currentUser()?.aiCredits.total || 1000,
+      drafts: allDocs.filter((d) => d.status === 'draft').length,
+      published: allDocs.filter((d) => d.status === 'published').length,
+      aiCreditsUsed: used,
+      aiCreditsTotal: total,
+      aiCreditsPercent: Math.round((used / total) * 100),
     };
+  });
+
+  ngOnInit(): void {
+    this.currentUser.set(this.authService.currentUserValue);
+    this.loadWorkspaces();
+  }
+
+  loadWorkspaces(): void {
+    this.isLoading.set(true);
+    this.loadError.set(null);
+    this.workspaceService.getMyWorkspaces().subscribe({
+      next: (workspaces) => {
+        this.workspaces.set(workspaces);
+        this.loadDocuments();
+      },
+      error: () => {
+        this.loadError.set('Failed to load workspaces. Please try again.');
+        this.isLoading.set(false);
+      },
+    });
+  }
+
+  loadDocuments(): void {
+    this.documentService.getDocuments().subscribe({
+      next: (response) => {
+        this.documents.set(response.documents);
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.loadError.set('Failed to load documents. Please try again.');
+        this.isLoading.set(false);
+      },
+    });
+  }
+
+  /** Set status filter and optionally clear workspace selection */
+  setFilter(status: string, workspace: Workspace | null = null): void {
+    this.filterStatus.set(status);
+    this.selectedWorkspace.set(workspace);
+  }
+
+  selectWorkspace(workspace: Workspace): void {
+    this.selectedWorkspace.set(workspace);
+    this.filterStatus.set('all');
   }
 
   createDocument(): void {
@@ -160,41 +180,71 @@ export class Dashboard implements OnInit {
 
   deleteDocument(documentId: string, event: Event): void {
     event.stopPropagation();
-
-    if (confirm('Are you sure you want to delete this document?')) {
+    const data: ConfirmDialogData = {
+      title: 'Delete Document',
+      message:
+        'This document will be permanently deleted and cannot be recovered.',
+      confirmLabel: 'Delete',
+    };
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data,
+    });
+    ref.afterClosed().subscribe((confirmed) => {
+      if (!confirmed) return;
       this.documentService.deleteDocument(documentId).subscribe({
         next: () => {
           this.documents.update((docs) =>
-            docs.filter((doc) => doc._id !== documentId)
+            docs.filter((d) => d._id !== documentId)
           );
+          this.snackbar.open('Document deleted', 'Dismiss', { duration: 3000 });
         },
-        error: (err) => {
-          console.error('Failed to delete document:', err);
-          alert('Failed to delete document. Please try again.');
+        error: () => {
+          this.snackbar.open('Failed to delete document', 'Dismiss', {
+            duration: 4000,
+          });
         },
       });
-    }
-  }
-
-  selectWorkspace(workspace: Workspace): void {
-    this.selectedWorkspace.set(workspace);
+    });
   }
 
   toggleViewMode(): void {
-    this.viewMode.update((mode) => (mode === 'grid' ? 'list' : 'grid'));
+    this.viewMode.update((m) => (m === 'grid' ? 'list' : 'grid'));
   }
 
   logout(): void {
-    if (confirm('Are you sure you want to logout?')) {
-      this.authService.logout();
-    }
+    const data: ConfirmDialogData = {
+      title: 'Sign out',
+      message: 'Are you sure you want to sign out?',
+      confirmLabel: 'Sign out',
+    };
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '360px',
+      data,
+    });
+    ref.afterClosed().subscribe((confirmed) => {
+      if (confirmed) this.authService.logout();
+    });
+  }
+
+  getInitials(name: string | null | undefined): string {
+    if (!name) return '?';
+    return name
+      .split(' ')
+      .slice(0, 2)
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase();
   }
 
   getDocumentPreview(content: string): string {
-    const plainText = content.replace(/<[^>]*>/g, '');
-    return (
-      plainText.substring(0, 120) + (plainText.length > 120 ? '...' : '')
-    );
+    const plainText = content.replace(/<[^>]*>/g, '').trim();
+    return plainText.substring(0, 140) + (plainText.length > 140 ? '…' : '');
+  }
+
+  getWordCount(content: string): number {
+    const text = content.replace(/<[^>]*>/g, '').trim();
+    return text ? text.split(/\s+/).length : 0;
   }
 
   getRelativeTime(date: Date): string {
@@ -205,15 +255,9 @@ export class Dashboard implements OnInit {
     const diffDays = Math.floor(diffMs / 86400000);
 
     if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} min ago`;
-    if (diffHours < 24)
-      return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
     return new Date(date).toLocaleDateString();
-  }
-
-  getStatusColor(status: string): string {
-    return status === 'published' ? 'primary' : 'accent';
   }
 }
