@@ -1,6 +1,6 @@
 <div class="editor-container">
   <!-- Top Toolbar -->
-  <mat-toolbar class="editor-toolbar" color="primary">
+  <mat-toolbar class="editor-toolbar">
     <button mat-icon-button (click)="goBack()" matTooltip="Back to dashboard">
       <mat-icon>arrow_back</mat-icon>
     </button>
@@ -62,6 +62,16 @@
         <span>Export as Markdown</span>
       </button>
     </mat-menu>
+
+    <button
+      mat-button
+      class="publish-btn"
+      [class]="'publish-btn status-' + status()"
+      (click)="publishDocument()"
+      [matTooltip]="status() === 'published' ? 'Unpublish' : 'Publish document'">
+      <mat-icon>{{ status() === 'published' ? 'public' : 'public_off' }}</mat-icon>
+      <span>{{ status() === 'published' ? 'Published' : 'Draft' }}</span>
+    </button>
 
     <button
       mat-icon-button
