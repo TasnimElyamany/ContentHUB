@@ -15,6 +15,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { QuillModule } from 'ngx-quill';
 import { Subject } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
@@ -23,6 +24,10 @@ import { DocumentService } from '../../../dashboard/services/document';
 import { AiService } from '../../services/ai';
 import { Document } from '../../../../models/document.model';
 import { CommentsSidebar } from '../comments-sidebar/comments-sidebar';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogData,
+} from '../../../../shared/components/confirm-dialog/confirm-dialog';
 
 @Component({
   selector: 'app-editor',
@@ -41,6 +46,7 @@ import { CommentsSidebar } from '../comments-sidebar/comments-sidebar';
     MatProgressSpinnerModule,
     MatBadgeModule,
     MatSnackBarModule,
+    MatDialogModule,
     QuillModule,
     MatMenuModule,
     CommentsSidebar,
@@ -54,6 +60,7 @@ export class Editor implements OnInit, OnDestroy {
   private documentService = inject(DocumentService);
   private aiService = inject(AiService);
   private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
 
   private destroy$ = new Subject<void>();
   private saveSubject$ = new Subject<void>();
@@ -66,6 +73,7 @@ export class Editor implements OnInit, OnDestroy {
 
   title = signal<string>('Untitled Document');
   content = signal<string>('');
+  status = signal<'draft' | 'published' | 'archived'>('draft');
   saveStatus = signal<'saved' | 'saving' | 'unsaved'>('saved');
 
   showAIPanel = signal<boolean>(false);
@@ -163,6 +171,7 @@ export class Editor implements OnInit, OnDestroy {
           this.documentId.set(doc._id);
           this.title.set(doc.title);
           this.content.set(doc.content);
+          this.status.set(doc.status);
           this.saveStatus.set('saved');
           this.isLoading.set(false);
           this.router.navigate(['/editor', doc._id], { replaceUrl: true });
@@ -183,6 +192,7 @@ export class Editor implements OnInit, OnDestroy {
         this.document.set(doc);
         this.title.set(doc.title);
         this.content.set(doc.content);
+        this.status.set(doc.status);
         this.saveStatus.set('saved');
         this.isLoading.set(false);
       },
@@ -374,6 +384,37 @@ export class Editor implements OnInit, OnDestroy {
 
   private sanitizeFilename(name: string): string {
     return name.replace(/[^a-z0-9_\- ]/gi, '_').trim() || 'document';
+  }
+
+  // ─── Publish ───────────────────────────────────────────────────────────────
+
+  publishDocument(): void {
+    const doc = this.document();
+    if (!doc) return;
+    const newStatus = this.status() === 'published' ? 'draft' : 'published';
+    const label = newStatus === 'published' ? 'Publish' : 'Unpublish';
+    const msg =
+      newStatus === 'published'
+        ? 'Make this document publicly visible?'
+        : 'Move this document back to draft?';
+    const data: ConfirmDialogData = { title: label, message: msg, confirmLabel: label };
+    const ref = this.dialog.open(ConfirmDialogComponent, { width: '360px', data });
+    ref.afterClosed().subscribe((confirmed) => {
+      if (!confirmed) return;
+      this.documentService.updateDocument(doc._id, { status: newStatus }).subscribe({
+        next: (updated) => {
+          this.document.set(updated);
+          this.status.set(updated.status);
+          this.snackBar.open(
+            newStatus === 'published' ? 'Document published!' : 'Moved to draft',
+            'Close',
+            { duration: 3000 }
+          );
+        },
+        error: () =>
+          this.snackBar.open('Failed to update status', 'Close', { duration: 4000 }),
+      });
+    });
   }
 
   // ─── Share ─────────────────────────────────────────────────────────────────
