@@ -20,6 +20,10 @@ import { Workspace } from '../../../../models/workspace.model';
 import { Document } from '../../../../models/document.model';
 import { User } from '../../../../models/user.model';
 import { InviteModal } from '../invite-modal/invite-modal';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogData,
+} from '../../../../shared/components/confirm-dialog/confirm-dialog';
 
 @Component({
   selector: 'app-workspace-detail',
@@ -183,8 +187,12 @@ export class WorkspaceDetail implements OnInit {
   }
 
   logout(): void {
-    if (confirm('Are you sure you want to logout?')) {
-      this.authService.logout();
-    }
+    const data: ConfirmDialogData = {
+      title: 'Sign out',
+      message: 'Are you sure you want to sign out?',
+      confirmLabel: 'Sign out',
+    };
+    this.dialog.open(ConfirmDialogComponent, { width: '360px', data })
+      .afterClosed().subscribe((confirmed) => { if (confirmed) this.authService.logout(); });
   }
 }
