@@ -16,6 +16,9 @@ export interface IUser extends Document {
     editorFont: string;
     defaultTone: string;
   };
+  isEmailVerified: boolean;
+  emailVerificationToken?: string;
+  emailVerificationExpires?: Date;
   passwordResetToken?: string;
   passwordResetExpires?: Date;
   createdAt: Date;
@@ -57,6 +60,9 @@ const UserSchema = new Schema<IUser>(
       editorFont: { type: String, default: 'Arial' },
       defaultTone: { type: String, default: 'professional' },
     },
+    isEmailVerified: { type: Boolean, default: false },
+    emailVerificationToken: { type: String, select: false },
+    emailVerificationExpires: { type: Date, select: false },
     passwordResetToken: { type: String, select: false },
     passwordResetExpires: { type: Date, select: false },
     lastLogin: { type: Date, default: Date.now },

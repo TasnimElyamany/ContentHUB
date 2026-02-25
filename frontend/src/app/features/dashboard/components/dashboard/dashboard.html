@@ -1,31 +1,37 @@
 <div class="dashboard-container">
-  <mat-toolbar color="primary" class="top-toolbar">
-    <button mat-icon-button (click)="isSidenavOpen = !isSidenavOpen">
+
+  <!-- ─── Top Toolbar ──────────────────────────────────────────────────────── -->
+  <mat-toolbar class="top-toolbar">
+    <button mat-icon-button (click)="isSidenavOpen.set(!isSidenavOpen())" matTooltip="Toggle sidebar">
       <mat-icon>menu</mat-icon>
     </button>
 
     <div class="logo">
-      <mat-icon>article</mat-icon>
-      <span class="logo-text">ContentHub AI</span>
+      <div class="logo-icon">
+        <mat-icon>article</mat-icon>
+      </div>
+      <span class="logo-text">ContentHub</span>
     </div>
 
     <span class="spacer"></span>
 
-    <mat-form-field class="search-field" appearance="outline">
+    <mat-form-field class="search-field" appearance="outline" subscriptSizing="dynamic">
       <mat-icon matPrefix>search</mat-icon>
       <input
         matInput
-        placeholder="Search documents..."
-        [(ngModel)]="searchQuery"
+        placeholder="Search documents…"
+        [ngModel]="searchQuery()"
         (ngModelChange)="searchQuery.set($event)">
     </mat-form-field>
 
-    <!-- User Menu -->
-    <button mat-icon-button [matMenuTriggerFor]="userMenu">
-      <mat-icon>account_circle</mat-icon>
+    <button mat-icon-button class="user-avatar-btn" [matMenuTriggerFor]="userMenu"
+            matTooltip="{{ currentUser()?.name }}">
+      <div class="user-avatar">{{ getInitials(currentUser()?.name) }}</div>
     </button>
-    <mat-menu #userMenu="matMenu">
-      <div class="user-menu-header">
+
+    <mat-menu #userMenu="matMenu" class="user-menu-panel">
+      <div class="user-menu-header" (click)="$event.stopPropagation()">
+        <div class="user-avatar large">{{ getInitials(currentUser()?.name) }}</div>
         <div class="user-info">
           <div class="user-name">{{ currentUser()?.name }}</div>
           <div class="user-email">{{ currentUser()?.email }}</div>
@@ -37,226 +43,234 @@
         <span>Settings</span>
       </button>
       <button mat-menu-item>
-        <mat-icon>help</mat-icon>
-        <span>Help</span>
+        <mat-icon>help_outline</mat-icon>
+        <span>Help &amp; Support</span>
       </button>
       <mat-divider></mat-divider>
-      <button mat-menu-item (click)="logout()">
+      <button mat-menu-item class="logout-item" (click)="logout()">
         <mat-icon>logout</mat-icon>
-        <span>Logout</span>
+        <span>Sign out</span>
       </button>
     </mat-menu>
   </mat-toolbar>
 
-  <!-- Main-->
+  <!-- ─── Sidenav Layout ────────────────────────────────────────────────────── -->
   <mat-sidenav-container class="sidenav-container">
-    <mat-sidenav
-      #sidenav
-      [opened]="isSidenavOpen"
-      mode="side"
-      class="sidenav">
+    <mat-sidenav [opened]="isSidenavOpen()" mode="side" class="sidenav">
 
-      <div class="stats-section">
-        <div class="stat-card">
-          <div class="stat-icon">
-            <mat-icon>description</mat-icon>
-          </div>
-          <div class="stat-info">
-            <div class="stat-value">{{ stats.totalDocuments }}</div>
-            <div class="stat-label">Total Docs</div>
-          </div>
+      <!-- Stats grid -->
+      <div class="stats-grid">
+        <div class="stat-item">
+          <span class="stat-value">{{ stats().totalDocuments }}</span>
+          <span class="stat-label">Total</span>
         </div>
-
-        <div class="stat-card">
-          <div class="stat-icon accent">
-            <mat-icon>auto_awesome</mat-icon>
-          </div>
-          <div class="stat-info">
-            <div class="stat-value">{{ stats.aiCreditsUsed }}/{{ stats.aiCreditsTotal }}</div>
-            <div class="stat-label">AI Credits</div>
-          </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ stats().drafts }}</span>
+          <span class="stat-label">Drafts</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ stats().published }}</span>
+          <span class="stat-label">Published</span>
+        </div>
+        <div class="stat-item ai">
+          <span class="stat-value">{{ stats().aiCreditsPercent }}%</span>
+          <span class="stat-label">AI used</span>
         </div>
       </div>
 
       <mat-nav-list>
-        <h3 mat-subheader>Navigation</h3>
+        <p class="nav-section-label">Library</p>
 
-        <a mat-list-item>
-          <mat-icon matListItemIcon>home</mat-icon>
+        <a mat-list-item
+           [class.active]="filterStatus() === 'all' && !selectedWorkspace()"
+           (click)="setFilter('all', null)">
+          <mat-icon matListItemIcon>description</mat-icon>
           <span matListItemTitle>All Documents</span>
-          <span matListItemMeta class="badge">{{ stats.totalDocuments }}</span>
+          <span class="nav-badge" matListItemMeta>{{ stats().totalDocuments }}</span>
         </a>
 
-        <a mat-list-item>
+        <a mat-list-item
+           [class.active]="filterStatus() === 'draft' && !selectedWorkspace()"
+           (click)="setFilter('draft', null)">
           <mat-icon matListItemIcon>edit_note</mat-icon>
           <span matListItemTitle>Drafts</span>
-          <span matListItemMeta class="badge accent">{{ stats.drafts }}</span>
+          <span class="nav-badge muted" matListItemMeta>{{ stats().drafts }}</span>
         </a>
 
-        <a mat-list-item>
-          <mat-icon matListItemIcon>publish</mat-icon>
+        <a mat-list-item
+           [class.active]="filterStatus() === 'published' && !selectedWorkspace()"
+           (click)="setFilter('published', null)">
+          <mat-icon matListItemIcon>task_alt</mat-icon>
           <span matListItemTitle>Published</span>
-          <span matListItemMeta class="badge">{{ stats.published }}</span>
+          <span class="nav-badge green" matListItemMeta>{{ stats().published }}</span>
         </a>
 
-        <a mat-list-item>
-          <mat-icon matListItemIcon>star</mat-icon>
-          <span matListItemTitle>Favorites</span>
-        </a>
-
-        <mat-divider></mat-divider>
-
-        <h3 mat-subheader>Workspaces</h3>
+        <mat-divider class="nav-divider"></mat-divider>
+        <p class="nav-section-label">Workspaces</p>
 
         @for (workspace of workspaces(); track workspace._id) {
-          <a
-            mat-list-item
-            [class.active]="selectedWorkspace()?._id === workspace._id"
-            (click)="selectWorkspace(workspace)">
+          <a mat-list-item
+             [class.active]="selectedWorkspace()?._id === workspace._id"
+             (click)="selectWorkspace(workspace)">
             <span matListItemIcon class="workspace-icon">{{ workspace.icon }}</span>
             <span matListItemTitle>{{ workspace.name }}</span>
           </a>
         }
 
-        <a mat-list-item routerLink="/workspace" class="manage-workspaces-btn">
+        <a mat-list-item routerLink="/workspace" class="manage-link">
           <mat-icon matListItemIcon>settings</mat-icon>
           <span matListItemTitle>Manage Workspaces</span>
         </a>
       </mat-nav-list>
     </mat-sidenav>
 
+    <!-- ─── Main Content ────────────────────────────────────────────────────── -->
     <mat-sidenav-content class="main-content">
+
+      <!-- Error banner -->
+      @if (loadError()) {
+        <div class="error-banner">
+          <mat-icon>error_outline</mat-icon>
+          <span>{{ loadError() }}</span>
+          <button mat-button (click)="loadWorkspaces()">Retry</button>
+        </div>
+      }
+
+      <!-- Content header -->
       <div class="content-header">
         <div class="header-left">
           <h1>
             @if (selectedWorkspace()) {
-              <span class="workspace-icon">{{ selectedWorkspace()?.icon }}</span>
+              <span class="ws-icon">{{ selectedWorkspace()?.icon }}</span>
+              {{ selectedWorkspace()?.name }}
+            } @else if (filterStatus() === 'draft') {
+              Drafts
+            } @else if (filterStatus() === 'published') {
+              Published
+            } @else {
+              All Documents
             }
-            {{ selectedWorkspace()?.name || 'All Documents' }}
           </h1>
-          <p class="subtitle">{{ filteredDocuments.length }} documents</p>
+          <p class="subtitle">
+            @if (isLoading()) {
+              Loading…
+            } @else {
+              {{ filteredDocuments().length }} {{ filteredDocuments().length === 1 ? 'document' : 'documents' }}
+            }
+          </p>
         </div>
 
         <div class="header-actions">
           <mat-chip-set>
-            <mat-chip
-              [highlighted]="filterStatus() === 'all'"
-              (click)="filterStatus.set('all')">
-              All
-            </mat-chip>
-            <mat-chip
-              [highlighted]="filterStatus() === 'draft'"
-              (click)="filterStatus.set('draft')">
-              Drafts
-            </mat-chip>
-            <mat-chip
-              [highlighted]="filterStatus() === 'published'"
-              (click)="filterStatus.set('published')">
-              Published
-            </mat-chip>
+            <mat-chip [highlighted]="filterStatus() === 'all'" (click)="filterStatus.set('all')">All</mat-chip>
+            <mat-chip [highlighted]="filterStatus() === 'draft'" (click)="filterStatus.set('draft')">Drafts</mat-chip>
+            <mat-chip [highlighted]="filterStatus() === 'published'" (click)="filterStatus.set('published')">Published</mat-chip>
           </mat-chip-set>
 
-          <button
-            mat-icon-button
-            (click)="toggleViewMode()"
-            [matTooltip]="viewMode() === 'grid' ? 'List View' : 'Grid View'">
-            <mat-icon>{{ viewMode() === 'grid' ? 'view_list' : 'view_module' }}</mat-icon>
+          <button mat-icon-button (click)="toggleViewMode()"
+                  [matTooltip]="viewMode() === 'grid' ? 'Switch to list' : 'Switch to grid'">
+            <mat-icon>{{ viewMode() === 'grid' ? 'view_list' : 'grid_view' }}</mat-icon>
           </button>
 
-          <button
-            mat-raised-button
-            color="primary"
-            (click)="createDocument()"
-            class="create-btn">
+          <button mat-flat-button class="create-btn" (click)="createDocument()">
             <mat-icon>add</mat-icon>
             New Document
           </button>
         </div>
       </div>
 
-      <div [class]="'documents-container documents-' + viewMode()">
-        @if (filteredDocuments.length === 0) {
-          <div class="empty-state">
-            <mat-icon class="empty-icon">description</mat-icon>
-            <h2>No documents found</h2>
-            <p>Create your first document to get started</p>
-            <button mat-raised-button color="primary" (click)="createDocument()">
-              <mat-icon>add</mat-icon>
-              Create Document
-            </button>
-          </div>
-        } @else {
-          @for (doc of filteredDocuments; track doc._id) {
-            <mat-card
-              class="document-card"
-              (click)="openDocument(doc._id)">
-              <mat-card-header>
-                <mat-icon mat-card-avatar>description</mat-icon>
-                <mat-card-title>{{ doc.title }}</mat-card-title>
-                <mat-card-subtitle>
-                  {{ getRelativeTime(doc.updatedAt) }}
-                </mat-card-subtitle>
+      <!-- Loading state -->
+      @if (isLoading()) {
+        <div class="loading-state">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Loading your documents…</p>
+        </div>
+      } @else {
 
-                <button
-                  mat-icon-button
-                  [matMenuTriggerFor]="docMenu"
-                  (click)="$event.stopPropagation()"
-                  class="card-menu-btn">
-                  <mat-icon>more_vert</mat-icon>
+        <!-- Document grid / list -->
+        <div [class]="'documents-container documents-' + viewMode()">
+
+          @if (filteredDocuments().length === 0) {
+            <div class="empty-state">
+              <div class="empty-icon-wrap">
+                <mat-icon>description</mat-icon>
+              </div>
+              <h2>{{ searchQuery() ? 'No results found' : 'No documents yet' }}</h2>
+              <p>
+                @if (searchQuery()) {
+                  Try a different search term or clear the filter.
+                } @else {
+                  Create your first document to get started.
+                }
+              </p>
+              @if (!searchQuery()) {
+                <button mat-flat-button class="create-btn" (click)="createDocument()">
+                  <mat-icon>add</mat-icon>
+                  Create Document
                 </button>
+              }
+            </div>
 
-                <mat-menu #docMenu="matMenu">
-                  <button mat-menu-item (click)="openDocument(doc._id)">
-                    <mat-icon>edit</mat-icon>
-                    <span>Edit</span>
-                  </button>
-                  <button mat-menu-item>
-                    <mat-icon>share</mat-icon>
-                    <span>Share</span>
-                  </button>
-                  <button mat-menu-item>
-                    <mat-icon>file_copy</mat-icon>
-                    <span>Duplicate</span>
-                  </button>
-                  <mat-divider></mat-divider>
-                  <button mat-menu-item (click)="deleteDocument(doc._id, $event)" class="delete-btn">
-                    <mat-icon>delete</mat-icon>
-                    <span>Delete</span>
-                  </button>
-                </mat-menu>
-              </mat-card-header>
+          } @else {
+            @for (doc of filteredDocuments(); track doc._id) {
+              <div class="document-card" [class]="'status-' + doc.status" (click)="openDocument(doc._id)">
 
-              <mat-card-content>
-                <p class="document-preview">{{ getDocumentPreview(doc.content) }}</p>
+                <div class="card-header">
+                  <div class="card-title-row">
+                    <span class="status-dot" [class]="'dot-' + doc.status"></span>
+                    <h3 class="card-title">{{ doc.title }}</h3>
+                  </div>
+                  <button mat-icon-button class="card-menu-btn"
+                          [matMenuTriggerFor]="docMenu"
+                          (click)="$event.stopPropagation()">
+                    <mat-icon>more_vert</mat-icon>
+                  </button>
+                  <mat-menu #docMenu="matMenu">
+                    <button mat-menu-item (click)="openDocument(doc._id)">
+                      <mat-icon>edit</mat-icon>
+                      <span>Open</span>
+                    </button>
+                    <mat-divider></mat-divider>
+                    <button mat-menu-item class="delete-item" (click)="deleteDocument(doc._id, $event)">
+                      <mat-icon>delete_outline</mat-icon>
+                      <span>Delete</span>
+                    </button>
+                  </mat-menu>
+                </div>
 
-                <div class="document-meta">
-                  <mat-chip-set>
+                <p class="card-preview">{{ getDocumentPreview(doc.content) }}</p>
+
+                @if (doc.tags.length > 0) {
+                  <div class="card-tags">
                     @for (tag of doc.tags.slice(0, 3); track tag) {
-                      <mat-chip class="tag-chip">{{ tag }}</mat-chip>
+                      <span class="tag">{{ tag }}</span>
                     }
-                  </mat-chip-set>
-                </div>
-              </mat-card-content>
+                    @if (doc.tags.length > 3) {
+                      <span class="tag muted">+{{ doc.tags.length - 3 }}</span>
+                    }
+                  </div>
+                }
 
-              <mat-card-footer>
-                <div class="document-footer">
-                  <div class="footer-left">
-                    <mat-chip [color]="getStatusColor(doc.status)">
-                      {{ doc.status }}
-                    </mat-chip>
-                  </div>
+                <div class="card-footer">
+                  <span class="footer-time">{{ getRelativeTime(doc.updatedAt) }}</span>
                   <div class="footer-right">
-                    <span class="ai-usage" matTooltip="AI tokens used">
-                      <mat-icon>auto_awesome</mat-icon>
-                      {{ doc.aiUsage.totalTokens }}
+                    <span class="word-count" matTooltip="Word count">
+                      <mat-icon>text_fields</mat-icon>
+                      {{ getWordCount(doc.content) }}w
                     </span>
+                    @if (doc.aiUsage.totalTokens > 0) {
+                      <span class="ai-usage" matTooltip="AI tokens used">
+                        <mat-icon>auto_awesome</mat-icon>
+                        {{ doc.aiUsage.totalTokens }}
+                      </span>
+                    }
                   </div>
                 </div>
-              </mat-card-footer>
-            </mat-card>
+              </div>
+            }
           }
-        }
-      </div>
+        </div>
+      }
     </mat-sidenav-content>
   </mat-sidenav-container>
 </div>

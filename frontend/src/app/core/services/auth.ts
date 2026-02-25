@@ -157,6 +157,14 @@ export class Auth {
     });
   }
 
+  verifyEmail(token: string): Observable<any> {
+    return this.http.post(`${this.API_URL}/auth/verify-email`, { token });
+  }
+
+  resendVerification(email: string): Observable<any> {
+    return this.http.post(`${this.API_URL}/auth/resend-verification`, { email });
+  }
+
 
 
   // DEVELOPMENT ONLY: Mock login for testing UI WITHOUT backend

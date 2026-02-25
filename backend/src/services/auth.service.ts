@@ -21,11 +21,26 @@ class AuthService {
 
     const hashedPassword = await hashPassword(data.password);
 
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const hashedVerificationToken = crypto
+      .createHash('sha256')
+      .update(verificationToken)
+      .digest('hex');
+
     const user = await User.create({
       name: data.name,
       email: data.email.toLowerCase(),
       password: hashedPassword,
+      isEmailVerified: false,
+      emailVerificationToken: hashedVerificationToken,
+      emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
     });
+
+    try {
+      await emailService.sendEmailVerification(user.email, user.name, verificationToken);
+    } catch (error) {
+      logger.error('Failed to send verification email:', error);
+    }
 
     const token = generateToken({
       userId: user._id.toString(),
@@ -152,6 +167,56 @@ class AuthService {
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     await user.save();
+
+    try {
+      await emailService.sendPasswordChangedNotification(user.email, user.name);
+    } catch (error) {
+      logger.error('Failed to send password changed notification:', error);
+    }
+  }
+
+  async verifyEmail(token: string): Promise<void> {
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const user = await User.findOne({
+      emailVerificationToken: hashedToken,
+      emailVerificationExpires: { $gt: Date.now() },
+    }).select('+emailVerificationToken +emailVerificationExpires');
+
+    if (!user) {
+      throw ApiError.badRequest('Invalid or expired verification token');
+    }
+
+    user.isEmailVerified = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpires = undefined;
+    await user.save();
+  }
+
+  async resendVerification(email: string): Promise<string> {
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user || user.isEmailVerified) {
+      return 'If the email exists and is not verified, a verification link has been sent';
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(verificationToken)
+      .digest('hex');
+
+    user.emailVerificationToken = hashedToken;
+    user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await user.save({ validateBeforeSave: false });
+
+    try {
+      await emailService.sendEmailVerification(user.email, user.name, verificationToken);
+    } catch (error) {
+      logger.error('Failed to resend verification email:', error);
+    }
+
+    return 'If the email exists and is not verified, a verification link has been sent';
   }
 }
 

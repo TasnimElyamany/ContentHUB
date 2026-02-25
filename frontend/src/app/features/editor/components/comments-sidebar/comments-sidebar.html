@@ -1,1 +1,124 @@
-<p>comments-sidebar works!</p>
+<div class="comments-body">
+  <!-- New Comment -->
+  <div class="new-comment">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Add a comment</mat-label>
+      <textarea
+        matInput
+        [(ngModel)]="newCommentText"
+        rows="2"
+        placeholder="Write a comment..."
+        (keydown.control.enter)="addComment()"
+        (keydown.meta.enter)="addComment()">
+      </textarea>
+    </mat-form-field>
+    <button
+      mat-raised-button
+      color="primary"
+      class="post-btn"
+      (click)="addComment()"
+      [disabled]="!newCommentText.trim()">
+      <mat-icon>send</mat-icon>
+      Post
+    </button>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <!-- States -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <mat-spinner diameter="32"></mat-spinner>
+    </div>
+  } @else if (comments().length === 0) {
+    <div class="empty-state">
+      <mat-icon>chat_bubble_outline</mat-icon>
+      <p>No comments yet</p>
+      <small>Be the first to comment!</small>
+    </div>
+  } @else {
+    <div class="comments-list">
+      @for (comment of comments(); track comment._id) {
+        <div class="comment-item" [class.resolved]="comment.resolved">
+
+          <div class="comment-header">
+            <div class="user-avatar">{{ getInitials(comment.user?.name) }}</div>
+            <div class="comment-meta">
+              <span class="user-name">{{ comment.user?.name || 'User' }}</span>
+              <span class="comment-time">{{ timeAgo(comment.createdAt) }}</span>
+            </div>
+            @if (comment.resolved) {
+              <span class="resolved-badge">Resolved</span>
+            }
+          </div>
+
+          @if (editingId() === comment._id) {
+            <div class="edit-form">
+              <mat-form-field appearance="outline" class="full-width">
+                <textarea matInput [(ngModel)]="editText" rows="2"></textarea>
+              </mat-form-field>
+              <div class="form-actions">
+                <button mat-button (click)="cancelEdit()">Cancel</button>
+                <button mat-raised-button color="primary" (click)="submitEdit(comment._id)">Save</button>
+              </div>
+            </div>
+          } @else {
+            <p class="comment-content">{{ comment.content }}</p>
+          }
+
+          <div class="comment-actions">
+            @if (!comment.resolved) {
+              <button mat-icon-button matTooltip="Reply" (click)="startReply(comment._id)">
+                <mat-icon>reply</mat-icon>
+              </button>
+              <button mat-icon-button matTooltip="Edit" (click)="startEdit(comment)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button matTooltip="Mark resolved" color="primary" (click)="resolveComment(comment._id)">
+                <mat-icon>check_circle_outline</mat-icon>
+              </button>
+            }
+            <button mat-icon-button matTooltip="Delete" color="warn" (click)="deleteComment(comment._id)">
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </div>
+
+          <!-- Reply Form -->
+          @if (replyingTo() === comment._id) {
+            <div class="reply-form">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Reply...</mat-label>
+                <textarea matInput [(ngModel)]="replyText" rows="2"></textarea>
+              </mat-form-field>
+              <div class="form-actions">
+                <button mat-button (click)="cancelReply()">Cancel</button>
+                <button mat-raised-button color="primary" (click)="submitReply(comment._id)" [disabled]="!replyText.trim()">
+                  Reply
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- Nested Replies -->
+          @if (comment.replies && comment.replies.length > 0) {
+            <div class="replies">
+              @for (reply of comment.replies; track reply._id) {
+                <div class="reply-item">
+                  <div class="comment-header">
+                    <div class="user-avatar small">{{ getInitials(reply.user?.name) }}</div>
+                    <div class="comment-meta">
+                      <span class="user-name">{{ reply.user?.name || 'User' }}</span>
+                      <span class="comment-time">{{ timeAgo(reply.createdAt) }}</span>
+                    </div>
+                  </div>
+                  <p class="comment-content">{{ reply.content }}</p>
+                </div>
+              }
+            </div>
+          }
+
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -24,7 +24,7 @@ export interface Collaborator {
 
 export interface CreateDocumentRequest {
   title: string;
-  workspaceId: string;
+  workspaceId?: string;
   content?: string;
 }
 

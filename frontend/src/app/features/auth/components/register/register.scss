@@ -1,5 +1,29 @@
 @import '../login/login.scss';
 
+.success-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius-md);
+  color: #16a34a;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+}
+
+.hidden {
+  display: none;
+}
+
 .terms-checkbox {
   margin-top: -0.5rem;
   margin-bottom: 1rem;

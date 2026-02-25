@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -14,14 +14,15 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatBadgeModule } from '@angular/material/badge';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { QuillModule } from 'ngx-quill';
 import { Subject } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 
-import { Auth } from '../../../../core/services/auth';
 import { DocumentService } from '../../../dashboard/services/document';
 import { AiService } from '../../services/ai';
 import { Document } from '../../../../models/document.model';
+import { CommentsSidebar } from '../comments-sidebar/comments-sidebar';
 
 @Component({
   selector: 'app-editor',
@@ -39,8 +40,10 @@ import { Document } from '../../../../models/document.model';
     MatTabsModule,
     MatProgressSpinnerModule,
     MatBadgeModule,
+    MatSnackBarModule,
     QuillModule,
     MatMenuModule,
+    CommentsSidebar,
   ],
   templateUrl: './editor.html',
   styleUrl: './editor.scss',
@@ -48,12 +51,14 @@ import { Document } from '../../../../models/document.model';
 export class Editor implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private authService = inject(Auth);
   private documentService = inject(DocumentService);
   private aiService = inject(AiService);
+  private snackBar = inject(MatSnackBar);
 
   private destroy$ = new Subject<void>();
   private saveSubject$ = new Subject<void>();
+  private quillInstance: any = null;
+  private selectionRange: { index: number; length: number } | null = null;
 
   documentId = signal<string>('');
   document = signal<Document | null>(null);
@@ -61,7 +66,7 @@ export class Editor implements OnInit, OnDestroy {
 
   title = signal<string>('Untitled Document');
   content = signal<string>('');
-  saveStatus = signal<'saved' | 'saving' | 'Unsaved'>('saved');
+  saveStatus = signal<'saved' | 'saving' | 'unsaved'>('saved');
 
   showAIPanel = signal<boolean>(false);
   aiPanelTab = signal<'generate' | 'enhance' | 'research'>('generate');
@@ -76,7 +81,7 @@ export class Editor implements OnInit, OnDestroy {
   aiCreditsRemaining = signal<number | null>(null);
 
   showComments = signal<boolean>(false);
-  comments = signal<any[]>([]);
+  commentCount = signal<number>(0);
 
   collaborators = signal<string[]>([]);
 
@@ -115,9 +120,8 @@ export class Editor implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.documentId.set(this.route.snapshot.params['id']);
 
-    //auto-save: triggers 2s after last change
     this.saveSubject$
-      .pipe(debounceTime(2000), takeUntil(this.destroy$))
+      .pipe(debounceTime(1000), takeUntil(this.destroy$))
       .subscribe(() => {
         this.saveDocument();
       });
@@ -130,30 +134,29 @@ export class Editor implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  onEditorCreated(quill: any): void {
+    this.quillInstance = quill;
+  }
+
   loadDocument(): void {
     const docId = this.documentId();
-
     if (docId === 'new') {
-      const workspaceId = this.route.snapshot.queryParams['workspace'];
-      if (workspaceId) {
-        this.createNewDocument(workspaceId);
-      } else {
-        this.title.set('Untitled Document');
-        this.content.set('');
-      }
+      const workspaceId: string | undefined = this.route.snapshot.queryParams['workspace'];
+      this.createNewDocument(workspaceId);
     } else {
       this.loadExistingDocument(docId);
     }
   }
 
-  createNewDocument(workspaceId: string): void {
+  createNewDocument(workspaceId?: string): void {
     this.isLoading.set(true);
+    const payload: { title: string; content: string; workspaceId?: string } = {
+      title: 'Untitled Document',
+      content: '',
+    };
+    if (workspaceId) payload.workspaceId = workspaceId;
     this.documentService
-      .createDocument({
-        title: 'Untitled Document',
-        workspaceId,
-        content: '',
-      })
+      .createDocument(payload)
       .subscribe({
         next: (doc) => {
           this.document.set(doc);
@@ -163,7 +166,6 @@ export class Editor implements OnInit, OnDestroy {
           this.saveStatus.set('saved');
           this.isLoading.set(false);
           this.router.navigate(['/editor', doc._id], { replaceUrl: true });
-          console.log('Document created:', doc._id);
         },
         error: (err) => {
           console.error('Failed to create document:', err);
@@ -183,50 +185,220 @@ export class Editor implements OnInit, OnDestroy {
         this.content.set(doc.content);
         this.saveStatus.set('saved');
         this.isLoading.set(false);
-        console.log('Document loaded:', doc._id);
       },
       error: (err) => {
         console.error('Failed to load document:', err);
         this.isLoading.set(false);
-        alert('Failed to load document. Returning to dashboard.');
+        this.snackBar.open('Failed to load document.', 'Close', { duration: 4000 });
         this.router.navigate(['/dashboard']);
       },
     });
   }
 
-  OnContentChanged(event: any): void {
-    this.content.set(event.html || '');
-    this.saveStatus.set('Unsaved');
+  // ─── Ctrl+S / Cmd+S ────────────────────────────────────────────────────────
+
+  @HostListener('document:keydown', ['$event'])
+  onKeydown(event: KeyboardEvent): void {
+    if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+      event.preventDefault();
+      this.saveDocument();
+    }
+  }
+
+  OnContentChanged(_event: any): void {
+    // Do NOT update the content signal here — doing so causes a feedback loop:
+    // content.set() → [ngModel] updates → ngx-quill writeValue → text-change → ngModelChange → repeat.
+    // The debounce timer would never fire. Instead, read live content from the Quill instance.
+    this.saveStatus.set('unsaved');
     this.saveSubject$.next();
   }
 
   OnTitleChanged(): void {
-    this.saveStatus.set('Unsaved');
+    this.saveStatus.set('unsaved');
     this.saveSubject$.next();
+  }
+
+  onTitleFocus(event: FocusEvent): void {
+    const input = event.target as HTMLInputElement;
+    input.value = '';
+    this.title.set('');
+  }
+
+  onTitleBlur(): void {
+    if (!this.title().trim()) {
+      this.title.set('Untitled Document');
+      this.saveSubject$.next();
+    }
   }
 
   saveDocument(): void {
     const doc = this.document();
     if (!doc) return;
 
+    const liveContent = this.quillInstance?.root.innerHTML ?? this.content();
     this.saveStatus.set('saving');
     this.documentService
-      .updateDocument(doc._id, {
-        title: this.title(),
-        content: this.content(),
-      })
+      .updateDocument(doc._id, { title: this.title(), content: liveContent })
       .subscribe({
         next: (updatedDoc) => {
           this.document.set(updatedDoc);
+          this.content.set(liveContent); // keep signal in sync after a successful save
           this.saveStatus.set('saved');
-          console.log('Document saved:', updatedDoc._id);
         },
         error: (err) => {
           console.error('Failed to save document:', err);
-          this.saveStatus.set('Unsaved');
+          this.saveStatus.set('unsaved');
         },
       });
   }
+
+  // ─── Export ────────────────────────────────────────────────────────────────
+
+  exportDocument(format: string): void {
+    switch (format) {
+      case 'pdf':   this.exportAsPdf();      break;
+      case 'docx':  this.exportAsDocx();     break;
+      case 'markdown': this.exportAsMarkdown(); break;
+    }
+  }
+
+  private exportAsPdf(): void {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      this.snackBar.open('Popup blocked. Please allow popups to export PDF.', 'Close', { duration: 4000 });
+      return;
+    }
+    const liveContent = this.quillInstance?.root.innerHTML ?? this.content();
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${this.title()}</title>
+        <style>
+          body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; line-height: 1.6; color: #333; }
+          h1 { font-size: 2rem; border-bottom: 2px solid #eee; padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
+          h2 { font-size: 1.5rem; } h3 { font-size: 1.25rem; }
+          p { margin: 0 0 1em; }
+          blockquote { border-left: 4px solid #ccc; padding-left: 1em; margin: 1em 0; color: #666; }
+          pre { background: #f4f4f4; padding: 1em; border-radius: 4px; overflow-x: auto; }
+          code { background: #f4f4f4; padding: 0.2em 0.4em; border-radius: 3px; font-size: 0.9em; }
+          ul, ol { margin: 1em 0; padding-left: 2em; }
+          img { max-width: 100%; }
+          @media print { body { margin: 20px; } }
+        </style>
+      </head>
+      <body>
+        <h1>${this.title()}</h1>
+        ${liveContent}
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+  }
+
+  private exportAsDocx(): void {
+    const liveContent = this.quillInstance?.root.innerHTML ?? this.content();
+    const wordHtml = `
+      <html xmlns:o='urn:schemas-microsoft-com:office:office'
+            xmlns:w='urn:schemas-microsoft-com:office:word'
+            xmlns='http://www.w3.org/TR/REC-html40'>
+      <head>
+        <meta charset='utf-8'>
+        <style>
+          body { font-family: Arial, sans-serif; font-size: 12pt; }
+          h1 { font-size: 24pt; } h2 { font-size: 18pt; } h3 { font-size: 14pt; }
+          p { margin: 0 0 12pt; }
+        </style>
+      </head>
+      <body>
+        <h1>${this.title()}</h1>
+        ${liveContent}
+      </body>
+      </html>`;
+
+    const blob = new Blob([wordHtml], { type: 'application/msword' });
+    this.triggerDownload(blob, `${this.sanitizeFilename(this.title())}.doc`);
+  }
+
+  private exportAsMarkdown(): void {
+    const liveContent = this.quillInstance?.root.innerHTML ?? this.content();
+    const markdown = `# ${this.title()}\n\n${this.htmlToMarkdown(liveContent)}`;
+    const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
+    this.triggerDownload(blob, `${this.sanitizeFilename(this.title())}.md`);
+  }
+
+  private htmlToMarkdown(html: string): string {
+    return html
+      .replace(/<h1[^>]*>(.*?)<\/h1>/gis, '# $1\n\n')
+      .replace(/<h2[^>]*>(.*?)<\/h2>/gis, '## $1\n\n')
+      .replace(/<h3[^>]*>(.*?)<\/h3>/gis, '### $1\n\n')
+      .replace(/<h4[^>]*>(.*?)<\/h4>/gis, '#### $1\n\n')
+      .replace(/<h5[^>]*>(.*?)<\/h5>/gis, '##### $1\n\n')
+      .replace(/<h6[^>]*>(.*?)<\/h6>/gis, '###### $1\n\n')
+      .replace(/<strong[^>]*>(.*?)<\/strong>/gis, '**$1**')
+      .replace(/<b[^>]*>(.*?)<\/b>/gis, '**$1**')
+      .replace(/<em[^>]*>(.*?)<\/em>/gis, '*$1*')
+      .replace(/<i[^>]*>(.*?)<\/i>/gis, '*$1*')
+      .replace(/<code[^>]*>(.*?)<\/code>/gis, '`$1`')
+      .replace(/<blockquote[^>]*>(.*?)<\/blockquote>/gis, '> $1\n\n')
+      .replace(/<li[^>]*>(.*?)<\/li>/gis, '- $1\n')
+      .replace(/<ul[^>]*>(.*?)<\/ul>/gis, '$1\n')
+      .replace(/<ol[^>]*>(.*?)<\/ol>/gis, '$1\n')
+      .replace(/<p[^>]*>(.*?)<\/p>/gis, '$1\n\n')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gis, '[$2]($1)')
+      .replace(/<img[^>]*alt="([^"]*)"[^>]*src="([^"]*)"[^>]*>/gis, '![$1]($2)')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
+  private triggerDownload(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const a = globalThis.document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.snackBar.open(`Downloaded as ${filename}`, 'Close', { duration: 3000 });
+  }
+
+  private sanitizeFilename(name: string): string {
+    return name.replace(/[^a-z0-9_\- ]/gi, '_').trim() || 'document';
+  }
+
+  // ─── Share ─────────────────────────────────────────────────────────────────
+
+  copyDocumentLink(): void {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      this.snackBar.open('Link copied to clipboard!', 'Close', { duration: 3000 });
+    });
+  }
+
+  shareDocument(): void {
+    this.snackBar.open('Share via email - coming soon!', 'Close', { duration: 3000 });
+  }
+
+  // ─── Comments ──────────────────────────────────────────────────────────────
+
+  toggleComments(): void {
+    this.showComments.update((v) => !v);
+  }
+
+  onCommentCountChange(count: number): void {
+    this.commentCount.set(count);
+  }
+
+  // ─── AI Panel ──────────────────────────────────────────────────────────────
 
   toggleAIPanel(): void {
     this.showAIPanel.update((value) => !value);
@@ -235,34 +407,25 @@ export class Editor implements OnInit, OnDestroy {
     }
   }
 
-  toggleComments(): void {
-    this.showComments.update((value) => !value);
-  }
-
   switchAITab(tab: 'generate' | 'enhance' | 'research'): void {
     this.aiPanelTab.set(tab);
   }
 
   loadAICredits(): void {
     this.aiService.getCredits().subscribe({
-      next: (credits) => {
-        this.aiCreditsRemaining.set(credits.remaining);
-      },
-      error: (err) => {
-        console.error('Failed to load AI credits:', err);
-      },
+      next: (credits) => this.aiCreditsRemaining.set(credits.remaining),
+      error: (err) => console.error('Failed to load AI credits:', err),
     });
   }
 
   generateAIContent(): void {
     if (!this.aiPrompt()) {
-      alert('Please enter a prompt for the AI.');
+      this.snackBar.open('Please enter a prompt for the AI.', 'Close', { duration: 3000 });
       return;
     }
-
     const docId = this.documentId();
     if (!docId || docId === 'new') {
-      alert('Please save the document first before using AI features.');
+      this.snackBar.open('Please save the document first.', 'Close', { duration: 3000 });
       return;
     }
 
@@ -284,32 +447,30 @@ export class Editor implements OnInit, OnDestroy {
           this.isAIProcessing.set(false);
         },
         error: (err) => {
-          console.error('AI generation error:', err);
-          this.aiError.set(err.error?.error || err.error?.message || 'AI generation failed. Please try again.');
+          this.aiError.set(err.error?.error || err.error?.message || 'AI generation failed.');
           this.isAIProcessing.set(false);
         },
       });
   }
 
   insertAIContent(): void {
-    if (!this.aiResult()) return;
-    const currentContent = this.content();
-    this.content.set(currentContent + '\n' + this.aiResult());
+    if (!this.aiResult() || !this.quillInstance) return;
+
+    const length = this.quillInstance.getLength();
+    this.quillInstance.clipboard.dangerouslyPasteHTML(length - 1, this.aiResult());
     this.aiResult.set('');
     this.aiPrompt.set('');
-    this.saveStatus.set('Unsaved');
+    this.saveStatus.set('unsaved');
     this.saveSubject$.next();
+    this.snackBar.open('Content inserted.', 'Close', { duration: 2000 });
   }
 
   copyAIContent(): void {
     if (!this.aiResult()) return;
-
     const tempDiv = globalThis.document.createElement('div');
     tempDiv.innerHTML = this.aiResult();
-    const text = tempDiv.textContent || tempDiv.innerText;
-
-    navigator.clipboard.writeText(text).then(() => {
-      alert('AI-generated content copied to clipboard.');
+    navigator.clipboard.writeText(tempDiv.textContent || tempDiv.innerText).then(() => {
+      this.snackBar.open('Copied to clipboard!', 'Close', { duration: 2000 });
     });
   }
 
@@ -318,19 +479,24 @@ export class Editor implements OnInit, OnDestroy {
   }
 
   enhanceText(action: string): void {
-    const selection = window.getSelection();
-    const selectedText = selection?.toString() || '';
-    if (!selectedText) {
-      alert('Please select some text to enhance.');
+    if (!this.quillInstance) return;
+
+    const range = this.quillInstance.getSelection();
+    const selectedText = range ? this.quillInstance.getText(range.index, range.length) : '';
+
+    if (!selectedText.trim()) {
+      this.snackBar.open('Please select some text in the editor first.', 'Close', { duration: 3000 });
       return;
     }
 
     const docId = this.documentId();
     if (!docId || docId === 'new') {
-      alert('Please save the document first before using AI features.');
+      this.snackBar.open('Please save the document first.', 'Close', { duration: 3000 });
       return;
     }
 
+    // Store range so replaceSelectedText can use it later
+    this.selectionRange = range;
     this.selectedText.set(selectedText);
     this.isAIProcessing.set(true);
     this.aiResult.set('');
@@ -340,9 +506,7 @@ export class Editor implements OnInit, OnDestroy {
       .enhance({
         text: selectedText,
         action: action as 'improve' | 'grammar' | 'shorten' | 'expand' | 'tone',
-        tone: action === 'tone'
-          ? (this.aiTone() as 'professional' | 'casual' | 'friendly')
-          : undefined,
+        tone: action === 'tone' ? (this.aiTone() as 'professional' | 'casual' | 'friendly') : undefined,
         documentId: docId,
       })
       .subscribe({
@@ -352,52 +516,55 @@ export class Editor implements OnInit, OnDestroy {
           this.isAIProcessing.set(false);
         },
         error: (err) => {
-          console.error('AI enhance error:', err);
-          this.aiError.set(err.error?.error || err.error?.message || 'AI enhancement failed. Please try again.');
+          this.aiError.set(err.error?.error || err.error?.message || 'AI enhancement failed.');
           this.isAIProcessing.set(false);
         },
       });
   }
 
   replaceSelectedText(): void {
-    if (!this.aiResult()) return;
-    alert('Text replacement feature - will be implemented with Quill API');
+    if (!this.aiResult() || !this.quillInstance || !this.selectionRange) return;
+
+    const { index, length } = this.selectionRange;
+    this.quillInstance.deleteText(index, length);
+    this.quillInstance.clipboard.dangerouslyPasteHTML(index, this.aiResult());
+    this.saveStatus.set('unsaved');
+    this.saveSubject$.next();
+
     this.aiResult.set('');
+    this.selectedText.set('');
+    this.selectionRange = null;
+    this.snackBar.open('Text replaced.', 'Close', { duration: 2000 });
   }
+
+  // ─── Navigation ────────────────────────────────────────────────────────────
 
   goBack(): void {
     this.router.navigate(['/dashboard']);
   }
 
-  shareDocument(): void {
-    alert('Share feature - coming soon!');
-  }
-
-  exportDocument(format: string): void {
-    alert(`Export as ${format} - coming soon!`);
-  }
+  // ─── Stats ─────────────────────────────────────────────────────────────────
 
   get wordCount(): number {
-    const text = this.content().replace(/<[^>]*>/g, '');
-    return text.split(/\s+/).filter((word) => word.length > 0).length;
+    const text = (this.quillInstance?.root.innerHTML ?? this.content()).replace(/<[^>]*>/g, '');
+    return text.split(/\s+/).filter((word: string) => word.length > 0).length;
   }
 
   get characterCount(): number {
-    const text = this.content().replace(/<[^>]*>/g, '');
-    return text.length;
+    return (this.quillInstance?.root.innerHTML ?? this.content()).replace(/<[^>]*>/g, '').length;
   }
 
   get saveStatusIcon(): string {
-    const status = this.saveStatus();
-    if (status === 'saved') return 'cloud_done';
-    if (status === 'saving') return 'cloud_upload';
+    const s = this.saveStatus();
+    if (s === 'saved') return 'cloud_done';
+    if (s === 'saving') return 'cloud_upload';
     return 'cloud_off';
   }
 
   get saveStatusText(): string {
-    const status = this.saveStatus();
-    if (status === 'saved') return 'All changes saved';
-    if (status === 'saving') return 'Saving...';
+    const s = this.saveStatus();
+    if (s === 'saved') return 'All changes saved';
+    if (s === 'saving') return 'Saving...';
     return 'Unsaved changes';
   }
 }

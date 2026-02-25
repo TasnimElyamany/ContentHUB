@@ -83,29 +83,35 @@ class DocumentService {
     userId: string,
     data: CreateDocumentInput
   ): Promise<IDocument> {
-    const workspace = await Workspace.findById(data.workspaceId);
-    if (!workspace) {
-      throw ApiError.notFound('Workspace not found');
-    }
+    let defaultStatus: 'draft' | 'published' | 'archived' = 'draft';
 
-    const hasAccess =
-      workspace.owner.toString() === userId ||
-      workspace.members.some(
-        (m) =>
-          m.userId.toString() === userId &&
-          ['owner', 'admin', 'editor'].includes(m.role)
-      );
+    if (data.workspaceId) {
+      const workspace = await Workspace.findById(data.workspaceId);
+      if (!workspace) {
+        throw ApiError.notFound('Workspace not found');
+      }
 
-    if (!hasAccess) {
-      throw ApiError.forbidden('You do not have permission to create documents in this workspace');
+      const hasAccess =
+        workspace.owner.toString() === userId ||
+        workspace.members.some(
+          (m) =>
+            m.userId.toString() === userId &&
+            ['owner', 'admin', 'editor'].includes(m.role)
+        );
+
+      if (!hasAccess) {
+        throw ApiError.forbidden('You do not have permission to create documents in this workspace');
+      }
+
+      defaultStatus = workspace.settings.defaultDocumentStatus || 'draft';
     }
 
     const document = await ContentDocument.create({
       title: data.title,
       content: data.content || '',
       owner: userId,
-      workspace: data.workspaceId,
-      status: workspace.settings.defaultDocumentStatus || 'draft',
+      ...(data.workspaceId ? { workspace: data.workspaceId } : {}),
+      status: defaultStatus,
     });
 
     return document;
@@ -212,13 +218,17 @@ class DocumentService {
     document: IDocument,
     userId: string
   ): Promise<boolean> {
-    // Owner has access
-    if (document.owner.toString() === userId) {
+    // Owner has access — handle both populated (User object) and raw ObjectId
+    const ownerId = (document.owner as any)?._id?.toString() ?? document.owner.toString();
+    if (ownerId === userId) {
       return true;
     }
 
-    // Collaborator has access
-    if (document.collaborators.some((c) => c.userId.toString() === userId)) {
+    // Collaborator has access — handle both populated and raw ObjectId
+    if (document.collaborators.some((c) => {
+      const collabId = (c.userId as any)?._id?.toString() ?? c.userId.toString();
+      return collabId === userId;
+    })) {
       return true;
     }
 
