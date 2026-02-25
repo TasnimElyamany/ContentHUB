@@ -7,6 +7,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
@@ -17,6 +18,10 @@ import { Auth } from '../../../../core/services/auth';
 import { Workspace } from '../../../../models/workspace.model';
 import { User } from '../../../../models/user.model';
 import { CreateWorkspaceModal } from '../create-workspace-modal/create-workspace-modal';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogData,
+} from '../../../../shared/components/confirm-dialog/confirm-dialog';
 
 @Component({
   selector: 'app-workspace-list',
@@ -34,6 +39,7 @@ import { CreateWorkspaceModal } from '../create-workspace-modal/create-workspace
     MatTooltipModule,
     MatChipsModule,
     MatDividerModule,
+    MatSnackBarModule,
   ],
   templateUrl: './workspace-list.html',
   styleUrl: './workspace-list.scss',
@@ -43,6 +49,7 @@ export class WorkspaceList implements OnInit {
   private authService = inject(Auth);
   private router = inject(Router);
   private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
 
   currentUser = signal<User | null>(null);
   workspaces = signal<Workspace[]>([]);
@@ -96,38 +103,45 @@ export class WorkspaceList implements OnInit {
 
   deleteWorkspace(workspace: Workspace, event: Event): void {
     event.stopPropagation();
-
-    if (!this.isOwner(workspace)) {
-      return;
-    }
-
-    if (confirm(`Are you sure you want to delete "${workspace.name}"? This action cannot be undone.`)) {
-      this.workspaceService.deleteWorkspace(workspace._id).subscribe({
-        next: () => {
-          this.workspaces.update((ws) => ws.filter((w) => w._id !== workspace._id));
-        },
-        error: (err) => {
-          console.error('Failed to delete workspace:', err);
-          alert('Failed to delete workspace. Please try again.');
-        },
+    if (!this.isOwner(workspace)) return;
+    const data: ConfirmDialogData = {
+      title: `Delete "${workspace.name}"`,
+      message: 'This workspace and all its settings will be permanently deleted. Documents are not deleted.',
+      confirmLabel: 'Delete',
+    };
+    this.dialog.open(ConfirmDialogComponent, { width: '420px', data })
+      .afterClosed().subscribe((confirmed) => {
+        if (!confirmed) return;
+        this.workspaceService.deleteWorkspace(workspace._id).subscribe({
+          next: () => {
+            this.workspaces.update((ws) => ws.filter((w) => w._id !== workspace._id));
+            this.snackBar.open('Workspace deleted', 'Dismiss', { duration: 3000 });
+          },
+          error: () =>
+            this.snackBar.open('Failed to delete workspace', 'Dismiss', { duration: 4000 }),
+        });
       });
-    }
   }
 
   leaveWorkspace(workspace: Workspace, event: Event): void {
     event.stopPropagation();
-
-    if (confirm(`Are you sure you want to leave "${workspace.name}"?`)) {
-      this.workspaceService.leaveWorkspace(workspace._id).subscribe({
-        next: () => {
-          this.workspaces.update((ws) => ws.filter((w) => w._id !== workspace._id));
-        },
-        error: (err) => {
-          console.error('Failed to leave workspace:', err);
-          alert('Failed to leave workspace. Please try again.');
-        },
+    const data: ConfirmDialogData = {
+      title: `Leave "${workspace.name}"`,
+      message: 'You will lose access to this workspace and its documents.',
+      confirmLabel: 'Leave',
+    };
+    this.dialog.open(ConfirmDialogComponent, { width: '400px', data })
+      .afterClosed().subscribe((confirmed) => {
+        if (!confirmed) return;
+        this.workspaceService.leaveWorkspace(workspace._id).subscribe({
+          next: () => {
+            this.workspaces.update((ws) => ws.filter((w) => w._id !== workspace._id));
+            this.snackBar.open('Left workspace', 'Dismiss', { duration: 3000 });
+          },
+          error: () =>
+            this.snackBar.open('Failed to leave workspace', 'Dismiss', { duration: 4000 }),
+        });
       });
-    }
   }
 
   isOwner(workspace: Workspace): boolean {
@@ -164,8 +178,12 @@ export class WorkspaceList implements OnInit {
   }
 
   logout(): void {
-    if (confirm('Are you sure you want to logout?')) {
-      this.authService.logout();
-    }
+    const data: ConfirmDialogData = {
+      title: 'Sign out',
+      message: 'Are you sure you want to sign out?',
+      confirmLabel: 'Sign out',
+    };
+    this.dialog.open(ConfirmDialogComponent, { width: '360px', data })
+      .afterClosed().subscribe((confirmed) => { if (confirmed) this.authService.logout(); });
   }
 }
