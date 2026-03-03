@@ -1,21 +1,28 @@
 <div class="workspace-list-container">
+
+  <!-- ─── Top Toolbar ──────────────────────────────────────────────────────── -->
   <mat-toolbar class="top-toolbar">
-    <button mat-icon-button (click)="goToDashboard()">
+    <button mat-icon-button (click)="goToDashboard()" matTooltip="Back to Dashboard">
       <mat-icon>arrow_back</mat-icon>
     </button>
 
     <div class="logo">
-      <mat-icon>workspaces</mat-icon>
+      <div class="logo-icon">
+        <mat-icon>workspaces</mat-icon>
+      </div>
       <span class="logo-text">Workspaces</span>
     </div>
 
     <span class="spacer"></span>
 
-    <button mat-icon-button [matMenuTriggerFor]="userMenu">
-      <mat-icon>account_circle</mat-icon>
+    <button mat-icon-button class="user-avatar-btn" [matMenuTriggerFor]="userMenu"
+            [matTooltip]="currentUser()?.name ?? ''">
+      <div class="user-avatar">{{ getInitials(currentUser()?.name) }}</div>
     </button>
-    <mat-menu #userMenu="matMenu">
-      <div class="user-menu-header">
+
+    <mat-menu #userMenu="matMenu" class="user-menu-panel">
+      <div class="user-menu-header" (click)="$event.stopPropagation()">
+        <div class="user-avatar large">{{ getInitials(currentUser()?.name) }}</div>
         <div class="user-info">
           <div class="user-name">{{ currentUser()?.name }}</div>
           <div class="user-email">{{ currentUser()?.email }}</div>
@@ -27,69 +34,82 @@
         <span>Dashboard</span>
       </button>
       <mat-divider></mat-divider>
-      <button mat-menu-item (click)="logout()">
+      <button mat-menu-item class="logout-item" (click)="logout()">
         <mat-icon>logout</mat-icon>
-        <span>Logout</span>
+        <span>Sign out</span>
       </button>
     </mat-menu>
   </mat-toolbar>
 
+  <!-- ─── Content ──────────────────────────────────────────────────────────── -->
   <div class="content">
-    <div class="page-header">
-      <div class="header-left">
+
+    <!-- Page hero -->
+    <div class="page-hero">
+      <div class="hero-left">
         <h1>My Workspaces</h1>
         <p class="subtitle">Manage your workspaces and collaborate with your team</p>
       </div>
-      <div class="header-actions">
-        <button mat-raised-button color="primary" (click)="openCreateModal()">
-          <mat-icon>add</mat-icon>
-          New Workspace
-        </button>
-      </div>
+      <button mat-flat-button class="create-btn" (click)="openCreateModal()">
+        <mat-icon>add</mat-icon>
+        New Workspace
+      </button>
     </div>
 
+    <!-- Loading -->
     @if (isLoading()) {
-      <div class="loading-container">
-        <mat-spinner diameter="48"></mat-spinner>
-        <p>Loading workspaces...</p>
+      <div class="loading-state">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Loading workspaces…</p>
       </div>
-    } @else if (error()) {
-      <div class="error-container">
-        <mat-icon class="error-icon">error_outline</mat-icon>
-        <p>{{ error() }}</p>
-        <button mat-raised-button color="primary" (click)="loadWorkspaces()">
-          <mat-icon>refresh</mat-icon>
-          Try Again
-        </button>
+    }
+
+    <!-- Error -->
+    @else if (error()) {
+      <div class="error-banner">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ error() }}</span>
+        <button mat-button (click)="loadWorkspaces()">Retry</button>
       </div>
-    } @else if (workspaces().length === 0) {
+    }
+
+    <!-- Empty state -->
+    @else if (workspaces().length === 0) {
       <div class="empty-state">
-        <mat-icon class="empty-icon">workspaces</mat-icon>
+        <div class="empty-icon-wrap">
+          <mat-icon>workspaces</mat-icon>
+        </div>
         <h2>No workspaces yet</h2>
         <p>Create your first workspace to start organizing your content</p>
-        <button mat-raised-button color="primary" (click)="openCreateModal()">
+        <button mat-flat-button class="create-btn" (click)="openCreateModal()">
           <mat-icon>add</mat-icon>
           Create Workspace
         </button>
       </div>
-    } @else {
+    }
+
+    <!-- Grid -->
+    @else {
       <div class="workspaces-grid">
         @for (workspace of workspaces(); track workspace._id) {
-          <mat-card class="workspace-card" (click)="openWorkspace(workspace)">
-            <mat-card-header>
-              <div class="workspace-icon-container" mat-card-avatar>
-                <span class="workspace-icon">{{ workspace.icon || '📁' }}</span>
-              </div>
-              <mat-card-title>{{ workspace.name }}</mat-card-title>
-              <mat-card-subtitle>
-                <mat-chip class="role-chip">{{ getWorkspaceRole(workspace) }}</mat-chip>
-              </mat-card-subtitle>
+          <div class="workspace-card" (click)="openWorkspace(workspace)">
 
-              <button
-                mat-icon-button
-                [matMenuTriggerFor]="workspaceMenu"
-                (click)="$event.stopPropagation()"
-                class="card-menu-btn">
+            <!-- Card top row -->
+            <div class="card-top">
+              <div class="workspace-icon-wrap">
+                <span>{{ workspace.icon || '📁' }}</span>
+              </div>
+
+              <div class="card-meta">
+                <h3 class="card-name">{{ workspace.name }}</h3>
+                <span class="role-badge role-{{ getWorkspaceRole(workspace).toLowerCase() }}">
+                  {{ getWorkspaceRole(workspace) }}
+                </span>
+              </div>
+
+              <button mat-icon-button class="card-menu-btn"
+                      [matMenuTriggerFor]="workspaceMenu"
+                      (click)="$event.stopPropagation()">
                 <mat-icon>more_vert</mat-icon>
               </button>
 
@@ -106,8 +126,8 @@
                 }
                 <mat-divider></mat-divider>
                 @if (isOwner(workspace)) {
-                  <button mat-menu-item class="delete-btn" (click)="deleteWorkspace(workspace, $event)">
-                    <mat-icon>delete</mat-icon>
+                  <button mat-menu-item class="delete-item" (click)="deleteWorkspace(workspace, $event)">
+                    <mat-icon>delete_outline</mat-icon>
                     <span>Delete</span>
                   </button>
                 } @else {
@@ -117,44 +137,47 @@
                   </button>
                 }
               </mat-menu>
-            </mat-card-header>
+            </div>
 
-            <mat-card-content>
-              @if (workspace.description) {
-                <p class="workspace-description">{{ workspace.description }}</p>
-              }
+            <!-- Description -->
+            @if (workspace.description) {
+              <p class="card-description">{{ workspace.description }}</p>
+            }
 
-              <div class="workspace-stats">
-                <div class="stat">
-                  <mat-icon>group</mat-icon>
-                  <span>{{ getMemberCount(workspace) }} members</span>
-                </div>
-                <div class="stat">
-                  <mat-icon>schedule</mat-icon>
-                  <span>{{ getRelativeTime(workspace.updatedAt) }}</span>
-                </div>
-              </div>
-            </mat-card-content>
+            <!-- Stats -->
+            <div class="card-stats">
+              <span class="stat">
+                <mat-icon>group</mat-icon>
+                {{ getMemberCount(workspace) }} {{ getMemberCount(workspace) === 1 ? 'member' : 'members' }}
+              </span>
+              <span class="stat">
+                <mat-icon>schedule</mat-icon>
+                {{ getRelativeTime(workspace.updatedAt) }}
+              </span>
+            </div>
 
-            <mat-card-footer>
-              <div class="workspace-footer">
+            <!-- Setting chips -->
+            @if (workspace.settings.aiCreditsShared || workspace.settings.requireApproval) {
+              <div class="card-chips">
                 @if (workspace.settings.aiCreditsShared) {
-                  <mat-chip class="setting-chip" matTooltip="AI credits are shared">
+                  <span class="chip chip-ai" matTooltip="AI credits are shared">
                     <mat-icon>auto_awesome</mat-icon>
                     Shared AI
-                  </mat-chip>
+                  </span>
                 }
                 @if (workspace.settings.requireApproval) {
-                  <mat-chip class="setting-chip" matTooltip="Publishing requires approval">
+                  <span class="chip chip-approval" matTooltip="Publishing requires approval">
                     <mat-icon>approval</mat-icon>
                     Approval
-                  </mat-chip>
+                  </span>
                 }
               </div>
-            </mat-card-footer>
-          </mat-card>
+            }
+
+          </div>
         }
       </div>
     }
+
   </div>
 </div>

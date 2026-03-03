@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -7,7 +7,6 @@ import { MatCardModule } from '@angular/material/card';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -39,7 +38,6 @@ import {
     MatMenuModule,
     MatIconModule,
     MatChipsModule,
-    MatSidenavModule,
     MatListModule,
     MatBadgeModule,
     MatTooltipModule,
@@ -72,6 +70,12 @@ export class Dashboard implements OnInit {
   filterStatus = signal('all');
   viewMode = signal<'grid' | 'list'>('grid');
   isSidenavOpen = signal(true);
+  sidenavWidth = signal(248);
+  isSidenavDocked = signal(false);
+
+  private _isResizing = false;
+  private _resizeStartX = 0;
+  private _resizeStartWidth = 0;
 
   filteredDocuments = computed(() => {
     let filtered = this.documents();
@@ -199,6 +203,30 @@ export class Dashboard implements OnInit {
 
   toggleViewMode(): void {
     this.viewMode.update((m) => (m === 'grid' ? 'list' : 'grid'));
+  }
+
+  startResize(event: MouseEvent): void {
+    this._isResizing = true;
+    this._resizeStartX = event.clientX;
+    this._resizeStartWidth = this.sidenavWidth();
+    event.preventDefault();
+  }
+
+  @HostListener('document:mousemove', ['$event'])
+  onResizeMove(event: MouseEvent): void {
+    if (!this._isResizing) return;
+    const delta = event.clientX - this._resizeStartX;
+    const newWidth = Math.max(180, Math.min(420, this._resizeStartWidth + delta));
+    this.sidenavWidth.set(newWidth);
+  }
+
+  @HostListener('document:mouseup')
+  onResizeEnd(): void {
+    this._isResizing = false;
+  }
+
+  toggleDock(): void {
+    this.isSidenavDocked.update((v) => !v);
   }
 
   logout(): void {

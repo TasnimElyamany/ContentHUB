@@ -30,7 +30,6 @@ import {
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
     MatToolbarModule,
     MatButtonModule,
     MatCardModule,
