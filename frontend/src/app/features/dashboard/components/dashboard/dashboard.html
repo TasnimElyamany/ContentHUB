@@ -15,14 +15,25 @@
 
     <span class="spacer"></span>
 
-    <mat-form-field class="search-field" appearance="outline" subscriptSizing="dynamic">
-      <mat-icon matPrefix>search</mat-icon>
+    <div class="search-box">
+      <mat-icon>search</mat-icon>
       <input
-        matInput
+        type="text"
+        class="search-input"
         placeholder="Search documents…"
         [ngModel]="searchQuery()"
         (ngModelChange)="searchQuery.set($event)">
-    </mat-form-field>
+      @if (searchQuery()) {
+        <button mat-icon-button class="clear-search" (click)="searchQuery.set('')" matTooltip="Clear">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </div>
+
+    <button mat-flat-button class="create-btn-toolbar" (click)="createDocument()">
+      <mat-icon>add</mat-icon>
+      New Document
+    </button>
 
     <button mat-icon-button class="user-avatar-btn" [matMenuTriggerFor]="userMenu"
             matTooltip="{{ currentUser()?.name }}">
@@ -132,7 +143,7 @@
         <div class="error-banner">
           <mat-icon>error_outline</mat-icon>
           <span>{{ loadError() }}</span>
-          <button mat-button (click)="loadWorkspaces()">Retry</button>
+          <button mat-button (click)="loadDocuments()">Retry</button>
         </div>
       }
 
@@ -172,10 +183,6 @@
             <mat-icon>{{ viewMode() === 'grid' ? 'view_list' : 'grid_view' }}</mat-icon>
           </button>
 
-          <button mat-flat-button class="create-btn" (click)="createDocument()">
-            <mat-icon>add</mat-icon>
-            New Document
-          </button>
         </div>
       </div>
 

@@ -7,9 +7,6 @@ import { MatCardModule } from '@angular/material/card';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatBadgeModule } from '@angular/material/badge';
@@ -42,9 +39,6 @@ import {
     MatMenuModule,
     MatIconModule,
     MatChipsModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatSelectModule,
     MatSidenavModule,
     MatListModule,
     MatBadgeModule,
@@ -122,24 +116,19 @@ export class Dashboard implements OnInit {
   ngOnInit(): void {
     this.currentUser.set(this.authService.currentUserValue);
     this.loadWorkspaces();
+    this.loadDocuments();
   }
 
   loadWorkspaces(): void {
-    this.isLoading.set(true);
-    this.loadError.set(null);
     this.workspaceService.getMyWorkspaces().subscribe({
-      next: (workspaces) => {
-        this.workspaces.set(workspaces);
-        this.loadDocuments();
-      },
-      error: () => {
-        this.loadError.set('Failed to load workspaces. Please try again.');
-        this.isLoading.set(false);
-      },
+      next: (workspaces) => this.workspaces.set(workspaces),
+      error: () => { /* workspaces are non-critical; sidebar will be empty */ },
     });
   }
 
   loadDocuments(): void {
+    this.isLoading.set(true);
+    this.loadError.set(null);
     this.documentService.getDocuments().subscribe({
       next: (response) => {
         this.documents.set(response.documents);
