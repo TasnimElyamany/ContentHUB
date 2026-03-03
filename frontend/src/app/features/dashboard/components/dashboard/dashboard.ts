@@ -122,24 +122,19 @@ export class Dashboard implements OnInit {
   ngOnInit(): void {
     this.currentUser.set(this.authService.currentUserValue);
     this.loadWorkspaces();
+    this.loadDocuments();
   }
 
   loadWorkspaces(): void {
-    this.isLoading.set(true);
-    this.loadError.set(null);
     this.workspaceService.getMyWorkspaces().subscribe({
-      next: (workspaces) => {
-        this.workspaces.set(workspaces);
-        this.loadDocuments();
-      },
-      error: () => {
-        this.loadError.set('Failed to load workspaces. Please try again.');
-        this.isLoading.set(false);
-      },
+      next: (workspaces) => this.workspaces.set(workspaces),
+      error: () => { /* workspaces are non-critical; sidebar will be empty */ },
     });
   }
 
   loadDocuments(): void {
+    this.isLoading.set(true);
+    this.loadError.set(null);
     this.documentService.getDocuments().subscribe({
       next: (response) => {
         this.documents.set(response.documents);

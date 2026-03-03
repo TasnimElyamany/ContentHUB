@@ -24,6 +24,11 @@
         (ngModelChange)="searchQuery.set($event)">
     </mat-form-field>
 
+    <button mat-flat-button class="create-btn-toolbar" (click)="createDocument()">
+      <mat-icon>add</mat-icon>
+      New Document
+    </button>
+
     <button mat-icon-button class="user-avatar-btn" [matMenuTriggerFor]="userMenu"
             matTooltip="{{ currentUser()?.name }}">
       <div class="user-avatar">{{ getInitials(currentUser()?.name) }}</div>
@@ -132,7 +137,7 @@
         <div class="error-banner">
           <mat-icon>error_outline</mat-icon>
           <span>{{ loadError() }}</span>
-          <button mat-button (click)="loadWorkspaces()">Retry</button>
+          <button mat-button (click)="loadDocuments()">Retry</button>
         </div>
       }
 
@@ -172,10 +177,6 @@
             <mat-icon>{{ viewMode() === 'grid' ? 'view_list' : 'grid_view' }}</mat-icon>
           </button>
 
-          <button mat-flat-button class="create-btn" (click)="createDocument()">
-            <mat-icon>add</mat-icon>
-            New Document
-          </button>
         </div>
       </div>
 

@@ -75,6 +75,24 @@
     mat-icon { color: var(--color-text-muted); }
   }
 
+  .create-btn-toolbar {
+    background: var(--color-primary) !important;
+    color: #fff !important;
+    border-radius: 8px !important;
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0 1rem !important;
+    height: 36px;
+    flex-shrink: 0;
+
+    mat-icon { font-size: 18px; margin-right: 0.25rem; }
+
+    @media (max-width: 600px) {
+      span { display: none; }
+      mat-icon { margin-right: 0; }
+    }
+  }
+
   .user-avatar-btn {
     width: 36px;
     height: 36px;
