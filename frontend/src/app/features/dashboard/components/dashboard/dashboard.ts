@@ -7,9 +7,6 @@ import { MatCardModule } from '@angular/material/card';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatBadgeModule } from '@angular/material/badge';
@@ -42,9 +39,6 @@ import {
     MatMenuModule,
     MatIconModule,
     MatChipsModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatSelectModule,
     MatSidenavModule,
     MatListModule,
     MatBadgeModule,

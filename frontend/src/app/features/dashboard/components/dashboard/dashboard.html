@@ -15,14 +15,20 @@
 
     <span class="spacer"></span>
 
-    <mat-form-field class="search-field" appearance="outline" subscriptSizing="dynamic">
-      <mat-icon matPrefix>search</mat-icon>
+    <div class="search-box">
+      <mat-icon>search</mat-icon>
       <input
-        matInput
+        type="text"
+        class="search-input"
         placeholder="Search documents…"
         [ngModel]="searchQuery()"
         (ngModelChange)="searchQuery.set($event)">
-    </mat-form-field>
+      @if (searchQuery()) {
+        <button mat-icon-button class="clear-search" (click)="searchQuery.set('')" matTooltip="Clear">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </div>
 
     <button mat-flat-button class="create-btn-toolbar" (click)="createDocument()">
       <mat-icon>add</mat-icon>
