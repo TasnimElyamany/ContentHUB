@@ -20,6 +20,15 @@ export const enhance = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
+export const research = asyncHandler(async (req: Request, res: Response) => {
+  const result = await aiService.research(req.user!.userId, req.body);
+
+  res.json({
+    success: true,
+    data: result,
+  });
+});
+
 export const getCredits = asyncHandler(async (req: Request, res: Response) => {
   const credits = await aiService.getCredits(req.user!.userId);
 

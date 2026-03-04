@@ -6,6 +6,7 @@ import { environment } from '../../../../environments/environment';
 import {
   AIGenerateRequest,
   AIEnhanceRequest,
+  AIResearchRequest,
   AIResponse,
 } from '../../../models/ai-request.model';
 
@@ -38,6 +39,12 @@ export class AiService {
   enhance(request: AIEnhanceRequest): Observable<AIResponse> {
     return this.http
       .post<ApiResponse<AIResponse>>(`${this.API_URL}/enhance`, request)
+      .pipe(map((response) => response.data));
+  }
+
+  research(request: AIResearchRequest): Observable<AIResponse> {
+    return this.http
+      .post<ApiResponse<AIResponse>>(`${this.API_URL}/research`, request)
       .pipe(map((response) => response.data));
   }
 

@@ -5,7 +5,7 @@ export interface IAIUsage extends Document {
   userId: mongoose.Types.ObjectId;
   documentId: mongoose.Types.ObjectId;
   workspaceId?: mongoose.Types.ObjectId;
-  action: 'generate' | 'improve' | 'grammar' | 'shorten' | 'expand' | 'tone';
+  action: 'generate' | 'improve' | 'grammar' | 'shorten' | 'expand' | 'tone' | 'ask' | 'factcheck' | 'sources';
   provider: string;
   tokensUsed: number;
   prompt: string;
@@ -32,7 +32,7 @@ const AIUsageSchema = new Schema<IAIUsage>(
     },
     action: {
       type: String,
-      enum: ['generate', 'improve', 'grammar', 'shorten', 'expand', 'tone'],
+      enum: ['generate', 'improve', 'grammar', 'shorten', 'expand', 'tone', 'ask', 'factcheck', 'sources'],
       required: true,
     },
     provider: {

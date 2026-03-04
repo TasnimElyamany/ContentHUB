@@ -12,6 +12,13 @@ export interface AIEnhanceRequest {
   documentId: string;
 }
 
+export interface AIResearchRequest {
+  action: 'ask' | 'factcheck' | 'sources';
+  query?: string;
+  text?: string;
+  documentId: string;
+}
+
 export interface AIResponse {
   result: string;
   tokensUsed: number;

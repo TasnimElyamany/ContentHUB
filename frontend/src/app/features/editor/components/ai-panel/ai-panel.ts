@@ -70,6 +70,13 @@ export class AiPanel implements OnInit {
   // ── Enhance tab ──────────────────────────────────────────────────────────────
   selectedText = signal('');
 
+  // ── Research tab ─────────────────────────────────────────────────────────────
+  researchMode = signal<'ask' | 'factcheck' | 'sources'>('ask');
+  researchQuery = signal('');
+  researchResult = signal('');
+  researchError = signal('');
+  isResearching = signal(false);
+
   toneOptions = [
     { value: 'professional', label: 'Professional' },
     { value: 'casual',       label: 'Casual' },
@@ -292,6 +299,59 @@ export class AiPanel implements OnInit {
     this.selectionRange = null;
     this.contentChanged.emit();
     this.snackBar.open('Text replaced.', 'Close', { duration: 2000 });
+  }
+
+  // ─── Research ────────────────────────────────────────────────────────────────
+
+  runResearch(): void {
+    const mode = this.researchMode();
+
+    if (mode === 'factcheck') {
+      const range = this.quillInstance?.getSelection();
+      const text = range ? this.quillInstance.getText(range.index, range.length) : this.selectedText();
+      if (!text.trim()) {
+        this.snackBar.open('Select some text in the editor to fact-check.', 'Close', { duration: 3000 });
+        return;
+      }
+      this.selectedText.set(text);
+    } else {
+      if (!this.researchQuery().trim()) {
+        this.snackBar.open('Please enter a question or topic.', 'Close', { duration: 3000 });
+        return;
+      }
+    }
+
+    if (!this.documentId || this.documentId === 'new') {
+      this.snackBar.open('Please save the document first.', 'Close', { duration: 3000 });
+      return;
+    }
+
+    this.isResearching.set(true);
+    this.researchResult.set('');
+    this.researchError.set('');
+
+    this.aiService.research({
+      action: mode,
+      query: mode !== 'factcheck' ? this.researchQuery() : undefined,
+      text: mode === 'factcheck' ? this.selectedText() : undefined,
+      documentId: this.documentId,
+    }).subscribe({
+      next: (response) => {
+        this.researchResult.set(response.result);
+        this.aiCreditsRemaining.set(response.creditsRemaining);
+        this.isResearching.set(false);
+      },
+      error: (err) => {
+        this.researchError.set(err.error?.error || err.error?.message || 'Research failed.');
+        this.isResearching.set(false);
+      },
+    });
+  }
+
+  clearResearch(): void {
+    this.researchResult.set('');
+    this.researchError.set('');
+    this.researchQuery.set('');
   }
 
   confidenceLabel(score: number): string {
