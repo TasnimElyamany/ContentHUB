@@ -2,17 +2,16 @@
 
 .dashboard-container {
   height: 100vh;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto 1fr;
   background: var(--color-surface);
+  overflow: hidden;
 }
 
 // ─── Top Toolbar ─────────────────────────────────────────────────────────────
 
 .top-toolbar {
-  flex-shrink: 0;
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 200;
   background: var(--color-surface-elevated) !important;
   color: var(--color-text-primary) !important;
@@ -30,7 +29,7 @@
     .logo-icon {
       width: 32px;
       height: 32px;
-      background: var(--color-primary);
+      background: var(--color-ws);
       border-radius: 8px;
       display: flex;
       align-items: center;
@@ -104,7 +103,7 @@
   }
 
   .create-btn-toolbar {
-    background: var(--color-primary) !important;
+    background: var(--color-ws) !important;
     color: #fff !important;
     border-radius: 8px !important;
     font-weight: 600;
@@ -112,6 +111,8 @@
     padding: 0 1rem !important;
     height: 36px;
     flex-shrink: 0;
+
+    &:hover:not(:disabled) { background: var(--color-ws-dark) !important; }
 
     mat-icon { font-size: 18px; margin-right: 0.25rem; }
 
@@ -134,7 +135,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--color-primary);
+  background: var(--color-ws);
   color: #fff;
   display: flex;
   align-items: center;
@@ -178,21 +179,26 @@
   mat-icon { color: var(--color-error) !important; }
 }
 
-// ─── Sidenav ─────────────────────────────────────────────────────────────────
+// ─── Split Layout ────────────────────────────────────────────────────────────
 
-.sidenav-container {
-  flex: 1;
+.split-layout {
+  display: flex;
+  flex-direction: row;
   overflow: hidden;
+  height: 100%;
 }
 
-.sidenav {
-  width: 248px;
-  background: var(--color-sidebar) !important;
-  border-right: 1px solid var(--color-border) !important;
+// ─── Sidebar Pane ────────────────────────────────────────────────────────────
+
+.sidebar-pane {
+  flex-shrink: 0;
+  background: var(--color-sidebar);
+  border-right: 1px solid var(--color-border);
   padding: 1.25rem 0 1rem;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
 
   // Stats grid
   .stats-grid {
@@ -225,7 +231,12 @@
         font-weight: 500;
       }
 
-      &.ai .stat-value { color: var(--color-primary); }
+      &.ai {
+        background: var(--color-ws-bg);
+        border-color: rgba(134, 104, 212, 0.2);
+        .stat-value { color: var(--color-ws-dark); }
+        .stat-label { color: var(--color-ws); }
+      }
     }
   }
 
@@ -243,6 +254,20 @@
     font-weight: 600;
     padding: 0 0.75rem;
     margin: 0 0 0.25rem;
+
+    &.workspaces-label {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      color: var(--color-ws-dark);
+
+      .ws-label-icon {
+        font-size: 13px;
+        width: 13px;
+        height: 13px;
+        color: var(--color-ws);
+      }
+    }
   }
 
   .nav-divider {
@@ -259,15 +284,59 @@
     mat-icon { color: var(--color-text-muted); }
     .workspace-icon { font-size: 1.1rem; line-height: 1; }
 
-    &:hover {
-      background: var(--color-hover);
-    }
+    &:hover { background: var(--color-hover); }
 
     &.active {
       background: var(--color-primary-selected);
       color: var(--color-primary);
       font-weight: 600;
       mat-icon { color: var(--color-primary); }
+    }
+  }
+
+  // ── Workspace items — violet theme ────────────────────────────────────────
+
+  a[mat-list-item].workspace-item {
+    .workspace-icon {
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      background: var(--color-ws-bg);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      line-height: 1;
+      transition: background 120ms ease;
+    }
+
+    &:hover {
+      background: var(--color-ws-bg) !important;
+      .workspace-icon { background: rgba(134, 104, 212, 0.16); }
+    }
+
+    &.active {
+      background: var(--color-ws-selected) !important;
+      color: var(--color-ws-dark) !important;
+      font-weight: 600;
+      .workspace-icon { background: rgba(134, 104, 212, 0.22); }
+    }
+  }
+
+  // ── Manage Workspaces ─────────────────────────────────────────────────────
+
+  .manage-link {
+    margin-top: 0.375rem;
+    color: var(--color-ws) !important;
+    font-size: 0.85rem;
+    border: 1px dashed rgba(134, 104, 212, 0.3);
+
+    mat-icon { color: var(--color-ws) !important; }
+
+    &:hover {
+      background: var(--color-ws-bg) !important;
+      border-color: var(--color-ws-light);
     }
   }
 
@@ -286,18 +355,89 @@
     }
   }
 
-  .manage-link {
-    color: var(--color-text-muted) !important;
-    font-size: 0.85rem;
-    mat-icon { color: var(--color-text-muted); }
+  // ── Resize handle ──────────────────────────────────────────────────────────
+
+  .resize-handle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 5px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 10;
+    background: transparent;
+    transition: background 120ms ease;
+
+    &:hover { background: rgba(134, 104, 212, 0.25); }
+    &:active { background: rgba(134, 104, 212, 0.4); }
+  }
+
+  // ── Docked (icon-strip) mode ───────────────────────────────────────────────
+
+  &.docked {
+    padding: 1rem 0;
+    overflow: hidden;
+    align-items: center;
+
+    mat-nav-list {
+      padding: 0;
+      width: 100%;
+    }
+
+    a[mat-list-item] {
+      width: 40px;
+      margin: 2px auto;
+      border-radius: 10px;
+      justify-content: center;
+      padding: 0;
+
+      mat-icon, span.workspace-icon {
+        margin: 0 !important;
+        min-width: unset;
+      }
+    }
+
+    .nav-divider { width: 32px; margin: 0.5rem auto; }
+  }
+
+  // ── Sidenav footer — dock toggle ───────────────────────────────────────────
+
+  .sidenav-footer {
+    flex-shrink: 0;
+    padding: 0.5rem 0.5rem 0.75rem;
+    border-top: 1px solid var(--color-border-light);
+    display: flex;
+    justify-content: flex-end;
+
+    .dock-btn {
+      color: var(--color-text-muted);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      transition: color 120ms ease, background 120ms ease, border-color 120ms ease;
+
+      &:hover {
+        color: var(--color-ws);
+        background: var(--color-ws-bg) !important;
+        border-color: var(--color-ws-light);
+      }
+    }
+  }
+
+  &.docked .sidenav-footer {
+    justify-content: center;
+    padding: 0.5rem 0 0.75rem;
   }
 }
 
-// ─── Main Content ────────────────────────────────────────────────────────────
+// ─── Content Pane ────────────────────────────────────────────────────────────
 
-.main-content {
-  background: var(--color-surface);
+.content-pane {
+  flex: 1;
+  min-width: 0;
   overflow-y: auto;
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
 }
 
 // ─── Error Banner ────────────────────────────────────────────────────────────

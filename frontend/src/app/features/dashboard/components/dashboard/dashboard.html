@@ -65,78 +65,124 @@
     </mat-menu>
   </mat-toolbar>
 
-  <!-- ─── Sidenav Layout ────────────────────────────────────────────────────── -->
-  <mat-sidenav-container class="sidenav-container">
-    <mat-sidenav [opened]="isSidenavOpen()" mode="side" class="sidenav">
+  <!-- ─── Split Layout ─────────────────────────────────────────────────────── -->
+  <div class="split-layout">
 
-      <!-- Stats grid -->
-      <div class="stats-grid">
-        <div class="stat-item">
-          <span class="stat-value">{{ stats().totalDocuments }}</span>
-          <span class="stat-label">Total</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-value">{{ stats().drafts }}</span>
-          <span class="stat-label">Drafts</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-value">{{ stats().published }}</span>
-          <span class="stat-label">Published</span>
-        </div>
-        <div class="stat-item ai">
-          <span class="stat-value">{{ stats().aiCreditsPercent }}%</span>
-          <span class="stat-label">AI used</span>
-        </div>
-      </div>
+    <!-- ── Sidebar Pane ──────────────────────────────────────────────────────── -->
+    @if (isSidenavOpen()) {
+      <div class="sidebar-pane"
+           [style.width.px]="isSidenavDocked() ? 56 : sidenavWidth()"
+           [class.docked]="isSidenavDocked()">
 
-      <mat-nav-list>
-        <p class="nav-section-label">Library</p>
-
-        <a mat-list-item
-           [class.active]="filterStatus() === 'all' && !selectedWorkspace()"
-           (click)="setFilter('all', null)">
-          <mat-icon matListItemIcon>description</mat-icon>
-          <span matListItemTitle>All Documents</span>
-          <span class="nav-badge" matListItemMeta>{{ stats().totalDocuments }}</span>
-        </a>
-
-        <a mat-list-item
-           [class.active]="filterStatus() === 'draft' && !selectedWorkspace()"
-           (click)="setFilter('draft', null)">
-          <mat-icon matListItemIcon>edit_note</mat-icon>
-          <span matListItemTitle>Drafts</span>
-          <span class="nav-badge muted" matListItemMeta>{{ stats().drafts }}</span>
-        </a>
-
-        <a mat-list-item
-           [class.active]="filterStatus() === 'published' && !selectedWorkspace()"
-           (click)="setFilter('published', null)">
-          <mat-icon matListItemIcon>task_alt</mat-icon>
-          <span matListItemTitle>Published</span>
-          <span class="nav-badge green" matListItemMeta>{{ stats().published }}</span>
-        </a>
-
-        <mat-divider class="nav-divider"></mat-divider>
-        <p class="nav-section-label">Workspaces</p>
-
-        @for (workspace of workspaces(); track workspace._id) {
-          <a mat-list-item
-             [class.active]="selectedWorkspace()?._id === workspace._id"
-             (click)="selectWorkspace(workspace)">
-            <span matListItemIcon class="workspace-icon">{{ workspace.icon }}</span>
-            <span matListItemTitle>{{ workspace.name }}</span>
-          </a>
+        <!-- Resize handle -->
+        @if (!isSidenavDocked()) {
+          <div class="resize-handle" (mousedown)="startResize($event)"></div>
         }
 
-        <a mat-list-item routerLink="/workspace" class="manage-link">
-          <mat-icon matListItemIcon>settings</mat-icon>
-          <span matListItemTitle>Manage Workspaces</span>
-        </a>
-      </mat-nav-list>
-    </mat-sidenav>
+        <!-- Stats grid -->
+        @if (!isSidenavDocked()) {
+          <div class="stats-grid">
+            <div class="stat-item">
+              <span class="stat-value">{{ stats().totalDocuments }}</span>
+              <span class="stat-label">Total</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">{{ stats().drafts }}</span>
+              <span class="stat-label">Drafts</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">{{ stats().published }}</span>
+              <span class="stat-label">Published</span>
+            </div>
+            <div class="stat-item ai">
+              <span class="stat-value">{{ stats().aiCreditsPercent }}%</span>
+              <span class="stat-label">AI used</span>
+            </div>
+          </div>
+        }
 
-    <!-- ─── Main Content ────────────────────────────────────────────────────── -->
-    <mat-sidenav-content class="main-content">
+        <mat-nav-list>
+          @if (!isSidenavDocked()) {
+            <p class="nav-section-label">Library</p>
+          }
+
+          <a mat-list-item
+             [class.active]="filterStatus() === 'all' && !selectedWorkspace()"
+             [matTooltip]="isSidenavDocked() ? 'All Documents' : ''"
+             matTooltipPosition="right"
+             (click)="setFilter('all', null)">
+            <mat-icon matListItemIcon>description</mat-icon>
+            @if (!isSidenavDocked()) { <span matListItemTitle>All Documents</span> }
+            @if (!isSidenavDocked()) { <span class="nav-badge" matListItemMeta>{{ stats().totalDocuments }}</span> }
+          </a>
+
+          <a mat-list-item
+             [class.active]="filterStatus() === 'draft' && !selectedWorkspace()"
+             [matTooltip]="isSidenavDocked() ? 'Drafts' : ''"
+             matTooltipPosition="right"
+             (click)="setFilter('draft', null)">
+            <mat-icon matListItemIcon>edit_note</mat-icon>
+            @if (!isSidenavDocked()) { <span matListItemTitle>Drafts</span> }
+            @if (!isSidenavDocked()) { <span class="nav-badge muted" matListItemMeta>{{ stats().drafts }}</span> }
+          </a>
+
+          <a mat-list-item
+             [class.active]="filterStatus() === 'published' && !selectedWorkspace()"
+             [matTooltip]="isSidenavDocked() ? 'Published' : ''"
+             matTooltipPosition="right"
+             (click)="setFilter('published', null)">
+            <mat-icon matListItemIcon>task_alt</mat-icon>
+            @if (!isSidenavDocked()) { <span matListItemTitle>Published</span> }
+            @if (!isSidenavDocked()) { <span class="nav-badge green" matListItemMeta>{{ stats().published }}</span> }
+          </a>
+
+          <mat-divider class="nav-divider"></mat-divider>
+
+          @if (!isSidenavDocked()) {
+            <p class="nav-section-label workspaces-label">
+              <mat-icon class="ws-label-icon">workspaces</mat-icon>
+              Workspaces
+            </p>
+          }
+
+          @for (workspace of workspaces(); track workspace._id) {
+            <a mat-list-item
+               class="workspace-item"
+               [class.active]="selectedWorkspace()?._id === workspace._id"
+               [matTooltip]="isSidenavDocked() ? workspace.name : ''"
+               matTooltipPosition="right"
+               (click)="selectWorkspace(workspace)">
+              <span matListItemIcon class="workspace-icon">{{ workspace.icon }}</span>
+              @if (!isSidenavDocked()) {
+                <span matListItemTitle>{{ workspace.name }}</span>
+              }
+            </a>
+          }
+
+          <a mat-list-item routerLink="/workspace" class="manage-link"
+             [matTooltip]="isSidenavDocked() ? 'Manage Workspaces' : ''"
+             matTooltipPosition="right">
+            <mat-icon matListItemIcon>add_circle_outline</mat-icon>
+            @if (!isSidenavDocked()) {
+              <span matListItemTitle>Manage Workspaces</span>
+            }
+          </a>
+        </mat-nav-list>
+
+        <!-- Footer — dock toggle -->
+        <div class="sidenav-footer">
+          <button mat-icon-button class="dock-btn"
+                  (click)="toggleDock()"
+                  [matTooltip]="isSidenavDocked() ? 'Expand sidebar' : 'Collapse sidebar'"
+                  matTooltipPosition="right">
+            <mat-icon>{{ isSidenavDocked() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- ── Content Pane ───────────────────────────────────────────────────────── -->
+    <div class="content-pane">
 
       <!-- Error banner -->
       @if (loadError()) {
@@ -182,7 +228,6 @@
                   [matTooltip]="viewMode() === 'grid' ? 'Switch to list' : 'Switch to grid'">
             <mat-icon>{{ viewMode() === 'grid' ? 'view_list' : 'grid_view' }}</mat-icon>
           </button>
-
         </div>
       </div>
 
@@ -278,6 +323,7 @@
           }
         </div>
       }
-    </mat-sidenav-content>
-  </mat-sidenav-container>
+    </div>
+
+  </div>
 </div>

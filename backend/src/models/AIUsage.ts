@@ -4,7 +4,7 @@ export interface IAIUsage extends Document {
   _id: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
   documentId: mongoose.Types.ObjectId;
-  workspaceId: mongoose.Types.ObjectId;
+  workspaceId?: mongoose.Types.ObjectId;
   action: 'generate' | 'improve' | 'grammar' | 'shorten' | 'expand' | 'tone';
   provider: string;
   tokensUsed: number;
@@ -28,7 +28,7 @@ const AIUsageSchema = new Schema<IAIUsage>(
     workspaceId: {
       type: Schema.Types.ObjectId,
       ref: 'Workspace',
-      required: true,
+      required: false,
     },
     action: {
       type: String,

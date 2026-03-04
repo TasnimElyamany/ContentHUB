@@ -6,12 +6,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -21,9 +16,9 @@ import { Subject } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 
 import { DocumentService } from '../../../dashboard/services/document';
-import { AiService } from '../../services/ai';
 import { Document } from '../../../../models/document.model';
 import { CommentsSidebar } from '../comments-sidebar/comments-sidebar';
+import { AiPanel } from '../ai-panel/ai-panel';
 import {
   ConfirmDialogComponent,
   ConfirmDialogData,
@@ -37,12 +32,7 @@ import {
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatChipsModule,
     MatTooltipModule,
-    MatTabsModule,
     MatProgressSpinnerModule,
     MatBadgeModule,
     MatSnackBarModule,
@@ -50,6 +40,7 @@ import {
     QuillModule,
     MatMenuModule,
     CommentsSidebar,
+    AiPanel,
   ],
   templateUrl: './editor.html',
   styleUrl: './editor.scss',
@@ -58,14 +49,12 @@ export class Editor implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private documentService = inject(DocumentService);
-  private aiService = inject(AiService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
 
   private destroy$ = new Subject<void>();
   private saveSubject$ = new Subject<void>();
-  private quillInstance: any = null;
-  private selectionRange: { index: number; length: number } | null = null;
+  protected quillInstance: any = null;
 
   documentId = signal<string>('');
   document = signal<Document | null>(null);
@@ -77,16 +66,6 @@ export class Editor implements OnInit, OnDestroy {
   saveStatus = signal<'saved' | 'saving' | 'unsaved'>('saved');
 
   showAIPanel = signal<boolean>(false);
-  aiPanelTab = signal<'generate' | 'enhance' | 'research'>('generate');
-  isAIProcessing = signal<boolean>(false);
-  aiError = signal<string>('');
-
-  aiPrompt = signal<string>('');
-  aiTone = signal<string>('professional');
-  aiLength = signal<string>('medium');
-  selectedText = signal<string>('');
-  aiResult = signal<string>('');
-  aiCreditsRemaining = signal<number | null>(null);
 
   showComments = signal<boolean>(false);
   commentCount = signal<number>(0);
@@ -111,19 +90,6 @@ export class Editor implements OnInit, OnDestroy {
       ['link', 'image', 'video'],
     ],
   };
-
-  toneOptions = [
-    { value: 'professional', label: 'Professional' },
-    { value: 'casual', label: 'Casual' },
-    { value: 'friendly', label: 'Friendly' },
-    { value: 'creative', label: 'Creative' },
-  ];
-
-  lengthOptions = [
-    { value: 'short', label: 'Short (1-2 paragraphs)' },
-    { value: 'medium', label: 'Medium (3-5 paragraphs)' },
-    { value: 'long', label: 'Long (6+ paragraphs)' },
-  ];
 
   ngOnInit(): void {
     this.documentId.set(this.route.snapshot.params['id']);
@@ -442,140 +408,12 @@ export class Editor implements OnInit, OnDestroy {
   // ─── AI Panel ──────────────────────────────────────────────────────────────
 
   toggleAIPanel(): void {
-    this.showAIPanel.update((value) => !value);
-    if (this.showAIPanel() && this.aiCreditsRemaining() === null) {
-      this.loadAICredits();
-    }
+    this.showAIPanel.update((v) => !v);
   }
 
-  switchAITab(tab: 'generate' | 'enhance' | 'research'): void {
-    this.aiPanelTab.set(tab);
-  }
-
-  loadAICredits(): void {
-    this.aiService.getCredits().subscribe({
-      next: (credits) => this.aiCreditsRemaining.set(credits.remaining),
-      error: (err) => console.error('Failed to load AI credits:', err),
-    });
-  }
-
-  generateAIContent(): void {
-    if (!this.aiPrompt()) {
-      this.snackBar.open('Please enter a prompt for the AI.', 'Close', { duration: 3000 });
-      return;
-    }
-    const docId = this.documentId();
-    if (!docId || docId === 'new') {
-      this.snackBar.open('Please save the document first.', 'Close', { duration: 3000 });
-      return;
-    }
-
-    this.isAIProcessing.set(true);
-    this.aiResult.set('');
-    this.aiError.set('');
-
-    this.aiService
-      .generate({
-        prompt: this.aiPrompt(),
-        tone: this.aiTone() as 'professional' | 'casual' | 'creative' | 'friendly',
-        length: this.aiLength() as 'short' | 'medium' | 'long',
-        documentId: docId,
-      })
-      .subscribe({
-        next: (response) => {
-          this.aiResult.set(response.result);
-          this.aiCreditsRemaining.set(response.creditsRemaining);
-          this.isAIProcessing.set(false);
-        },
-        error: (err) => {
-          this.aiError.set(err.error?.error || err.error?.message || 'AI generation failed.');
-          this.isAIProcessing.set(false);
-        },
-      });
-  }
-
-  insertAIContent(): void {
-    if (!this.aiResult() || !this.quillInstance) return;
-
-    const length = this.quillInstance.getLength();
-    this.quillInstance.clipboard.dangerouslyPasteHTML(length - 1, this.aiResult());
-    this.aiResult.set('');
-    this.aiPrompt.set('');
+  onAIContentChanged(): void {
     this.saveStatus.set('unsaved');
     this.saveSubject$.next();
-    this.snackBar.open('Content inserted.', 'Close', { duration: 2000 });
-  }
-
-  copyAIContent(): void {
-    if (!this.aiResult()) return;
-    const tempDiv = globalThis.document.createElement('div');
-    tempDiv.innerHTML = this.aiResult();
-    navigator.clipboard.writeText(tempDiv.textContent || tempDiv.innerText).then(() => {
-      this.snackBar.open('Copied to clipboard!', 'Close', { duration: 2000 });
-    });
-  }
-
-  regenerateAI(): void {
-    this.generateAIContent();
-  }
-
-  enhanceText(action: string): void {
-    if (!this.quillInstance) return;
-
-    const range = this.quillInstance.getSelection();
-    const selectedText = range ? this.quillInstance.getText(range.index, range.length) : '';
-
-    if (!selectedText.trim()) {
-      this.snackBar.open('Please select some text in the editor first.', 'Close', { duration: 3000 });
-      return;
-    }
-
-    const docId = this.documentId();
-    if (!docId || docId === 'new') {
-      this.snackBar.open('Please save the document first.', 'Close', { duration: 3000 });
-      return;
-    }
-
-    // Store range so replaceSelectedText can use it later
-    this.selectionRange = range;
-    this.selectedText.set(selectedText);
-    this.isAIProcessing.set(true);
-    this.aiResult.set('');
-    this.aiError.set('');
-
-    this.aiService
-      .enhance({
-        text: selectedText,
-        action: action as 'improve' | 'grammar' | 'shorten' | 'expand' | 'tone',
-        tone: action === 'tone' ? (this.aiTone() as 'professional' | 'casual' | 'friendly') : undefined,
-        documentId: docId,
-      })
-      .subscribe({
-        next: (response) => {
-          this.aiResult.set(response.result);
-          this.aiCreditsRemaining.set(response.creditsRemaining);
-          this.isAIProcessing.set(false);
-        },
-        error: (err) => {
-          this.aiError.set(err.error?.error || err.error?.message || 'AI enhancement failed.');
-          this.isAIProcessing.set(false);
-        },
-      });
-  }
-
-  replaceSelectedText(): void {
-    if (!this.aiResult() || !this.quillInstance || !this.selectionRange) return;
-
-    const { index, length } = this.selectionRange;
-    this.quillInstance.deleteText(index, length);
-    this.quillInstance.clipboard.dangerouslyPasteHTML(index, this.aiResult());
-    this.saveStatus.set('unsaved');
-    this.saveSubject$.next();
-
-    this.aiResult.set('');
-    this.selectedText.set('');
-    this.selectionRange = null;
-    this.snackBar.open('Text replaced.', 'Close', { duration: 2000 });
   }
 
   // ─── Navigation ────────────────────────────────────────────────────────────

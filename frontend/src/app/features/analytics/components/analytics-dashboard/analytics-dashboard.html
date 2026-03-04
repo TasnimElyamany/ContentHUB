@@ -1,1 +1,146 @@
-<p>analytics-dashboard works!</p>
+<div class="analytics-container">
+
+  <!-- Toolbar -->
+  <mat-toolbar class="top-toolbar">
+    <button mat-icon-button (click)="goBack()" matTooltip="Back to dashboard">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div class="toolbar-title">
+      <mat-icon>bar_chart</mat-icon>
+      <span>Analytics</span>
+    </div>
+    <span class="spacer"></span>
+    <button mat-icon-button (click)="load()" matTooltip="Refresh">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </mat-toolbar>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="center-state">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Loading analytics…</p>
+    </div>
+  }
+
+  <!-- Error -->
+  @else if (error()) {
+    <div class="center-state">
+      <mat-icon class="error-icon">error_outline</mat-icon>
+      <p>{{ error() }}</p>
+      <button mat-flat-button (click)="load()">Retry</button>
+    </div>
+  }
+
+  <!-- Content -->
+  @else {
+    <div class="content">
+
+      <!-- ── Activity ─────────────────────────────────────────────────────── -->
+      <section class="section">
+        <h2 class="section-title">
+          <mat-icon>person</mat-icon>
+          Your Activity
+        </h2>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-icon blue"><mat-icon>add_circle_outline</mat-icon></div>
+            <div class="stat-body">
+              <span class="stat-value">{{ activity()?.documentsCreated ?? 0 }}</span>
+              <span class="stat-label">Documents Created</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon purple"><mat-icon>edit</mat-icon></div>
+            <div class="stat-body">
+              <span class="stat-value">{{ activity()?.documentsEdited ?? 0 }}</span>
+              <span class="stat-label">Documents Edited</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green"><mat-icon>comment</mat-icon></div>
+            <div class="stat-body">
+              <span class="stat-value">{{ activity()?.commentsAdded ?? 0 }}</span>
+              <span class="stat-label">Comments Added</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon amber"><mat-icon>auto_awesome</mat-icon></div>
+            <div class="stat-body">
+              <span class="stat-value">{{ activity()?.aiRequestsMade ?? 0 }}</span>
+              <span class="stat-label">AI Requests</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <mat-divider></mat-divider>
+
+      <!-- ── AI Usage ─────────────────────────────────────────────────────── -->
+      <section class="section">
+        <h2 class="section-title">
+          <mat-icon>auto_awesome</mat-icon>
+          AI Usage
+        </h2>
+
+        <div class="stat-grid two-col">
+          <div class="stat-card accent">
+            <div class="stat-icon amber"><mat-icon>bolt</mat-icon></div>
+            <div class="stat-body">
+              <span class="stat-value">{{ aiStats()?.totalRequests ?? 0 }}</span>
+              <span class="stat-label">Total AI Requests</span>
+            </div>
+          </div>
+          <div class="stat-card accent">
+            <div class="stat-icon blue"><mat-icon>data_usage</mat-icon></div>
+            <div class="stat-body">
+              <span class="stat-value">{{ (aiStats()?.totalTokens ?? 0) | number }}</span>
+              <span class="stat-label">Total Tokens Used</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Requests by action -->
+        @if (aiByAction().length > 0) {
+          <div class="breakdown">
+            <h3 class="breakdown-title">Requests by Action</h3>
+            @for (item of aiByAction(); track item.key) {
+              <div class="breakdown-row">
+                <span class="breakdown-label">{{ item.label }}</span>
+                <div class="breakdown-bar-wrap">
+                  <div class="breakdown-bar"
+                       [style.width.%]="aiByAction()[0].count > 0 ? (item.count / aiByAction()[0].count) * 100 : 0">
+                  </div>
+                </div>
+                <span class="breakdown-count">{{ item.count }}</span>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Daily activity chart -->
+        @if (aiByDay().length > 0) {
+          <div class="chart-section">
+            <h3 class="breakdown-title">Daily Requests (last 14 days)</h3>
+            <div class="bar-chart">
+              @for (day of aiByDay(); track day.date) {
+                <div class="bar-col" [matTooltip]="day.label + ': ' + day.count + ' requests'">
+                  <div class="bar" [style.height.%]="day.pct"></div>
+                  <span class="bar-label">{{ day.label }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        @if (aiByAction().length === 0 && aiByDay().length === 0) {
+          <div class="empty-ai">
+            <mat-icon>auto_awesome</mat-icon>
+            <p>No AI usage yet. Start using the AI assistant in the editor.</p>
+          </div>
+        }
+      </section>
+
+    </div>
+  }
+</div>

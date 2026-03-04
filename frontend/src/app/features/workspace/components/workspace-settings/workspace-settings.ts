@@ -13,11 +13,16 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { WorkspaceService } from '../../services/workspace';
 import { Auth } from '../../../../core/services/auth';
 import { Workspace } from '../../../../models/workspace.model';
 import { User } from '../../../../models/user.model';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogData,
+} from '../../../../shared/components/confirm-dialog/confirm-dialog';
 
 const WORKSPACE_ICONS = ['📁', '💼', '🚀', '📊', '🎨', '📝', '💡', '🔬', '📚', '🎯', '🌟', '⚡'];
 
@@ -38,6 +43,7 @@ const WORKSPACE_ICONS = ['📁', '💼', '🚀', '📊', '🎨', '📝', '💡',
     MatDividerModule,
     MatSnackBarModule,
     MatMenuModule,
+    MatDialogModule,
   ],
   templateUrl: './workspace-settings.html',
   styleUrl: './workspace-settings.scss',
@@ -49,6 +55,7 @@ export class WorkspaceSettings implements OnInit {
   private workspaceService = inject(WorkspaceService);
   private authService = inject(Auth);
   private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
 
   currentUser = signal<User | null>(null);
   workspace = signal<Workspace | null>(null);
@@ -153,24 +160,22 @@ export class WorkspaceSettings implements OnInit {
     const workspace = this.workspace();
     if (!workspace) return;
 
-    if (
-      confirm(
-        `Are you sure you want to delete "${workspace.name}"?\n\nThis will permanently delete all documents and data. This action cannot be undone.`
-      )
-    ) {
-      this.workspaceService.deleteWorkspace(workspace._id).subscribe({
-        next: () => {
-          this.snackBar.open('Workspace deleted', 'Close', { duration: 3000 });
-          this.router.navigate(['/workspace']);
-        },
-        error: (err) => {
-          console.error('Failed to delete workspace:', err);
-          this.snackBar.open('Failed to delete workspace', 'Close', {
-            duration: 3000,
-          });
-        },
+    const data: ConfirmDialogData = {
+      title: 'Delete Workspace',
+      message: `Delete "${workspace.name}"? This will permanently remove all documents and data and cannot be undone.`,
+      confirmLabel: 'Delete',
+    };
+    this.dialog.open(ConfirmDialogComponent, { width: '420px', data })
+      .afterClosed().subscribe((confirmed) => {
+        if (!confirmed) return;
+        this.workspaceService.deleteWorkspace(workspace._id).subscribe({
+          next: () => {
+            this.snackBar.open('Workspace deleted', 'Close', { duration: 3000 });
+            this.router.navigate(['/workspace']);
+          },
+          error: () => this.snackBar.open('Failed to delete workspace', 'Close', { duration: 3000 }),
+        });
       });
-    }
   }
 
   goBack(): void {
@@ -187,8 +192,14 @@ export class WorkspaceSettings implements OnInit {
   }
 
   logout(): void {
-    if (confirm('Are you sure you want to logout?')) {
-      this.authService.logout();
-    }
+    const data: ConfirmDialogData = {
+      title: 'Sign out',
+      message: 'Are you sure you want to sign out?',
+      confirmLabel: 'Sign out',
+    };
+    this.dialog.open(ConfirmDialogComponent, { width: '360px', data })
+      .afterClosed().subscribe((confirmed) => {
+        if (confirmed) this.authService.logout();
+      });
   }
 }

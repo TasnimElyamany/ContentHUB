@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
@@ -28,10 +27,8 @@ import {
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
     MatToolbarModule,
     MatButtonModule,
-    MatCardModule,
     MatMenuModule,
     MatIconModule,
     MatDialogModule,
@@ -158,6 +155,16 @@ export class WorkspaceList implements OnInit {
     }
     const member = workspace.members.find((m) => m.userId === this.currentUser()?._id);
     return member?.role ? member.role.charAt(0).toUpperCase() + member.role.slice(1) : 'Member';
+  }
+
+  getInitials(name: string | null | undefined): string {
+    if (!name) return '?';
+    return name
+      .split(' ')
+      .slice(0, 2)
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase();
   }
 
   getRelativeTime(date: Date): string {

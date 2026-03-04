@@ -39,7 +39,7 @@ class AIService {
     await AIUsage.create({
       userId,
       documentId: data.documentId,
-      workspaceId: document.workspace,
+      ...(document.workspace ? { workspaceId: document.workspace } : {}),
       action: 'generate',
       provider: 'groq',
       tokensUsed,
@@ -86,7 +86,7 @@ class AIService {
     await AIUsage.create({
       userId,
       documentId: data.documentId,
-      workspaceId: document.workspace,
+      ...(document.workspace ? { workspaceId: document.workspace } : {}),
       action: data.action,
       provider: 'groq',
       tokensUsed,
