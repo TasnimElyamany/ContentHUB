@@ -1,11 +1,11 @@
-.ai-sidebar {
+:host {
+  display: block;
   width: 320px;
   flex-shrink: 0;
   background: var(--color-surface-elevated);
   border-left: 1px solid var(--color-border-light);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 
   @media (max-width: 1200px) { width: 280px; }
   @media (max-width: 968px) {
@@ -16,79 +16,56 @@
     box-shadow: var(--shadow-lg);
   }
 
-  // Make tab group fill remaining height and scroll its content
-  ::ng-deep .mat-mdc-tab-group {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  ::ng-deep .mat-mdc-tab-body-wrapper {
-    flex: 1;
-    min-height: 0;
-    overflow: hidden;
-  }
-
-  ::ng-deep .mat-mdc-tab-body {
-    height: 100%;
-    overflow: hidden;
-  }
-
-  ::ng-deep .mat-mdc-tab-body-content {
-    height: 100%;
-    overflow-y: auto !important;
-  }
-
-  // ── Violet tab indicator ───────────────────────────────────────────────────
-
-  ::ng-deep .mat-mdc-tab-header {
-    border-bottom: 1px solid var(--color-border-light);
-  }
-
-  ::ng-deep .mdc-tab-indicator .mdc-tab-indicator__content--underline {
-    border-color: var(--color-ws) !important;
-  }
-
-  ::ng-deep .mdc-tab--active .mdc-tab__text-label {
-    color: var(--color-ws) !important;
-  }
-
-  ::ng-deep .mdc-tab__ripple::before,
-  ::ng-deep .mat-mdc-tab .mat-ripple-element {
-    background-color: var(--color-ws) !important;
-  }
-
-  // ── Violet form-field focus (all fields) ──────────────────────────────────
-
+  // Violet focus ring on the prompt textarea
   ::ng-deep .mat-mdc-form-field.mat-focused {
     .mdc-notched-outline__leading,
     .mdc-notched-outline__notch,
-    .mdc-notched-outline__trailing {
-      border-color: var(--color-ws) !important;
-    }
-
+    .mdc-notched-outline__trailing { border-color: var(--color-ws) !important; }
     .mdc-floating-label { color: var(--color-ws) !important; }
-    .mat-mdc-select-arrow { color: var(--color-ws) !important; }
-  }
-
-  // ── Violet select panel option ────────────────────────────────────────────
-
-  ::ng-deep .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) {
-    .mdc-list-item__primary-text { color: var(--color-ws) !important; }
-  }
-
-  ::ng-deep .mat-pseudo-checkbox-checked,
-  ::ng-deep .mat-pseudo-checkbox-indeterminate {
-    background-color: var(--color-ws) !important;
   }
 }
 
-// ─── Header ──────────────────────────────────────────────────────────────────
+// ─── Tab strip ───────────────────────────────────────────────────────────────
 
+.tab-strip {
+  display: flex;
+  border-bottom: 1px solid var(--color-border-light);
+  background: var(--color-surface-elevated);
+  padding: 0 0.25rem;
+  position: sticky;
+  top: 53px;   // just below the sticky sidebar-header
+  z-index: 15;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 0.75rem 0.25rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease;
+
+  &:hover { color: var(--color-text-primary); }
+
+  &.active {
+    color: var(--color-ws);
+    border-bottom-color: var(--color-ws);
+    font-weight: 600;
+  }
+}
+
+// ─── Header
 .sidebar-header {
-  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--color-surface-elevated);
   padding: 0.875rem 0.75rem 0.875rem 1rem;
   border-bottom: 1px solid var(--color-border-light);
   display: flex;
@@ -129,8 +106,7 @@
   }
 }
 
-// ─── Quality mode banner ──────────────────────────────────────────────────────
-
+// Quality mode banner
 .quality-banner {
   display: flex;
   align-items: center;
@@ -145,7 +121,7 @@
   mat-icon { font-size: 16px; width: 16px; height: 16px; flex-shrink: 0; color: var(--color-ws); }
 }
 
-// ─── Credits ─────────────────────────────────────────────────────────────────
+// ─── Credits
 
 .ai-credits {
   display: flex;
@@ -161,7 +137,7 @@
   mat-icon { font-size: 1rem; width: 1rem; height: 1rem; color: var(--color-ws); }
 }
 
-// ─── Tab content ─────────────────────────────────────────────────────────────
+// ─── Tab content
 
 .tab-content {
   padding: 1rem;
@@ -200,8 +176,7 @@
   .full-width { width: 100%; }
 }
 
-// ─── Custom field (native select) ────────────────────────────────────────────
-
+// ─── Custom field
 .field-group {
   display: flex;
   flex-direction: column;
@@ -251,7 +226,7 @@
   }
 }
 
-// ─── Generate button ──────────────────────────────────────────────────────────
+// ─── Generate button
 
 .generate-btn {
   background: linear-gradient(135deg, var(--color-ws), var(--color-ws-dark)) !important;
@@ -277,7 +252,7 @@
   mat-icon { font-size: 18px; }
 }
 
-// ─── Attempts summary ────────────────────────────────────────────────────────
+// ─── Attempts summary
 
 .attempts-summary {
   display: flex;
@@ -300,13 +275,13 @@
   }
 }
 
-// ─── Confidence classes ───────────────────────────────────────────────────────
+// ─── Confidence classes
 
 .conf-high   { background: var(--color-success-bg); color: var(--color-success); }
 .conf-medium { background: rgba(245, 158, 11, 0.12); color: #d97706; }
 .conf-low    { background: rgba(239, 68, 68, 0.1); color: var(--color-error); }
 
-// ─── Confidence badge ─────────────────────────────────────────────────────────
+// ─── Confidence badge
 
 .confidence-badge {
   display: inline-flex;
@@ -321,7 +296,7 @@
   mat-icon { font-size: 14px; width: 14px; height: 14px; }
 }
 
-// ─── Error ────────────────────────────────────────────────────────────────────
+// error message style
 
 .ai-error {
   display: flex;
@@ -338,7 +313,7 @@
   mat-icon { font-size: 1.1rem; width: 1.1rem; height: 1.1rem; flex-shrink: 0; margin-top: 1px; }
 }
 
-// ─── Result ───────────────────────────────────────────────────────────────────
+//result style
 
 .ai-result {
   margin-top: 0.875rem;
@@ -403,7 +378,7 @@
   }
 }
 
-// ─── Enhance ─────────────────────────────────────────────────────────────────
+// enhnace
 
 .info-box {
   display: flex;

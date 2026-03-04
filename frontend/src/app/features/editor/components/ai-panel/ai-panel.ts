@@ -1,7 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatTabsModule } from '@angular/material/tabs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -24,7 +23,6 @@ interface Attempt {
   imports: [
     CommonModule,
     FormsModule,
-    MatTabsModule,
     MatButtonModule,
     MatIconModule,
     MatFormFieldModule,
