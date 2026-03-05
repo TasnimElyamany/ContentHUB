@@ -2,63 +2,63 @@
 
 
 :root {
-  // Primary
-  --color-primary: #5a6b7d;
-  --color-primary-light: #7a8a9a;
-  --color-primary-dark: #3d4d5c;
-  --color-primary-hover: rgba(90, 107, 125, 0.08);
-  --color-primary-selected: rgba(90, 107, 125, 0.12);
+  // Primary — warm taupe (earthy, professional, inviting)
+  --color-primary: #7a6b5a;
+  --color-primary-light: #9d8e80;
+  --color-primary-dark: #5c5045;
+  --color-primary-hover: rgba(122, 107, 90, 0.08);
+  --color-primary-selected: rgba(122, 107, 90, 0.13);
 
-  // Accent
-  --color-accent: #c9863a;
-  --color-accent-light: #e0a85c;
-  --color-accent-dark: #a86d2a;
+  // Accent — warm amber (earthy energy)
+  --color-accent: #c47c38;
+  --color-accent-light: #db9f62;
+  --color-accent-dark: #a0622a;
 
-  // Workspace violet (cheerful creative accent)
+  // Workspace violet (creative/AI accent)
   --color-ws: #8668d4;
   --color-ws-light: #a88ee0;
   --color-ws-dark: #6448b8;
   --color-ws-bg: rgba(134, 104, 212, 0.09);
   --color-ws-selected: rgba(134, 104, 212, 0.15);
 
-  // Surfaces
-  --color-surface: #faf9f7;
+  // Surfaces — warm cream/linen (soft earth base)
+  --color-surface: #faf8f5;
   --color-surface-elevated: #ffffff;
-  --color-surface-muted: #f3f2f0;
-  --color-sidebar: #f6f5f3;
+  --color-surface-muted: #f2efe9;
+  --color-sidebar: #f5f2ec;
 
-  // Text
+  // Text — warm dark (not cold black)
   --color-text-primary: #2d2a26;
   --color-text-secondary: #5c5650;
-  --color-text-muted: #9a9490;
+  --color-text-muted: #9a9288;
   --color-text-inverse: #ffffff;
   --color-text-on-primary: #ffffff;
   --color-text-on-accent: #ffffff;
 
-  // Borders
-  --color-border: #e5e2de;
-  --color-border-light: #edebe8;
+  // Borders — warm grey
+  --color-border: #e4e0d8;
+  --color-border-light: #ece8e0;
 
   // Interactive states
   --color-hover: rgba(45, 42, 38, 0.04);
   --color-active: rgba(45, 42, 38, 0.08);
-  --color-focus: rgba(90, 107, 125, 0.15);
-  --color-selected: rgba(90, 107, 125, 0.1);
+  --color-focus: rgba(122, 107, 90, 0.15);
+  --color-selected: rgba(122, 107, 90, 0.1);
 
-  // Status colors
-  --color-success: #5a9a6e;
-  --color-success-bg: rgba(90, 154, 110, 0.1);
-  --color-warning: #c98a3a;
-  --color-warning-bg: rgba(201, 138, 58, 0.1);
-  --color-error: #b85c5c;
-  --color-error-bg: rgba(184, 92, 92, 0.1);
-  --color-info: #6a8ab0;
-  --color-info-bg: rgba(106, 138, 176, 0.1);
+  // Status — warm-toned
+  --color-success: #5c8f6a;
+  --color-success-bg: rgba(92, 143, 106, 0.1);
+  --color-warning: #c47c38;
+  --color-warning-bg: rgba(196, 124, 56, 0.1);
+  --color-error: #b85a5a;
+  --color-error-bg: rgba(184, 90, 90, 0.1);
+  --color-info: #6a8a9a;
+  --color-info-bg: rgba(106, 138, 154, 0.1);
 
-  // Shadows
-  --shadow-sm: 0 1px 3px rgba(45, 42, 38, 0.04);
-  --shadow-md: 0 4px 12px rgba(45, 42, 38, 0.06);
-  --shadow-lg: 0 8px 24px rgba(45, 42, 38, 0.08);
+  // Shadows — warm tint
+  --shadow-sm: 0 1px 3px rgba(45, 42, 38, 0.06);
+  --shadow-md: 0 4px 12px rgba(45, 42, 38, 0.08);
+  --shadow-lg: 0 8px 24px rgba(45, 42, 38, 0.1);
 
   // Border radius
   --radius-sm: 4px;
@@ -71,20 +71,20 @@
   --transition-normal: 200ms ease;
 }
 
-// Custom Material palette
+// Custom Material palette — warm taupe primary
 $content-hub-primary: (
-  50: #f4f5f7,
-  100: #e4e7eb,
-  200: #c9ced6,
-  300: #a8b1bd,
-  400: #7a8a9a,
-  500: #5a6b7d,
-  600: #4a5968,
-  700: #3d4d5c,
-  800: #2d3a47,
-  900: #1f2830,
+  50:  #f5f2ee,
+  100: #e8e1d8,
+  200: #d4c8ba,
+  300: #bcaa95,
+  400: #a08e78,
+  500: #7a6b5a,
+  600: #675a4a,
+  700: #54483b,
+  800: #40362c,
+  900: #2c251e,
   contrast: (
-    50: #2d2a26,
+    50:  #2d2a26,
     100: #2d2a26,
     200: #2d2a26,
     300: #2d2a26,
@@ -98,18 +98,18 @@ $content-hub-primary: (
 );
 
 $content-hub-accent: (
-  50: #fdf6ef,
-  100: #f9e8d4,
-  200: #f2d4ae,
-  300: #e8ba7e,
-  400: #dfa458,
-  500: #c9863a,
-  600: #a86d2a,
-  700: #8a5622,
-  800: #6c421c,
-  900: #4e3016,
+  50:  #fdf5ec,
+  100: #f8e3ca,
+  200: #f0ca9e,
+  300: #e6ae6e,
+  400: #d99448,
+  500: #c47c38,
+  600: #a4632a,
+  700: #854e20,
+  800: #663c18,
+  900: #472a10,
   contrast: (
-    50: #2d2a26,
+    50:  #2d2a26,
     100: #2d2a26,
     200: #2d2a26,
     300: #2d2a26,
@@ -281,7 +281,7 @@ body {
   }
 }
 
-// Progress indicators
+
 .mat-mdc-progress-bar {
   --mdc-linear-progress-active-indicator-color: var(--color-primary);
 }
@@ -290,7 +290,6 @@ body {
   --mdc-circular-progress-active-indicator-color: var(--color-primary);
 }
 
-// Links
 a {
   color: var(--color-primary);
   text-decoration: none;
@@ -301,13 +300,11 @@ a {
   }
 }
 
-// Selection highlight
 ::selection {
   background: rgba(59, 130, 246, 0.28);
   color: inherit;
 }
 
-// Scrollbar - Subtle
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -341,4 +338,34 @@ a {
 
 .bg-surface-elevated {
   background-color: var(--color-surface-elevated) !important;
+}
+
+// ─── CDK Overlay (Dialogs, Menus, Dropdowns) ─────────────────────────────────
+
+.cdk-overlay-dark-backdrop {
+  background: rgba(30, 24, 18, 0.55) !important;
+}
+
+.mat-mdc-dialog-container {
+  --mdc-dialog-container-color: var(--color-surface-elevated);
+  --mdc-dialog-subhead-color: var(--color-text-primary);
+  --mdc-dialog-supporting-text-color: var(--color-text-secondary);
+
+  .mdc-dialog__surface {
+    background: var(--color-surface-elevated) !important;
+    box-shadow: 0 12px 40px rgba(45, 42, 38, 0.18) !important;
+  }
+}
+
+.mat-mdc-menu-panel {
+  background: var(--color-surface-elevated) !important;
+  border: 1px solid var(--color-border-light) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: 0 8px 28px rgba(45, 42, 38, 0.14) !important;
+}
+
+// Tooltip
+.mat-mdc-tooltip {
+  --mdc-plain-tooltip-container-color: #2d2a26;
+  --mdc-plain-tooltip-supporting-text-color: #ffffff;
 }

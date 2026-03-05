@@ -205,7 +205,7 @@
           <div class="result-header">
             <span class="result-label">Enhanced text</span>
           </div>
-          <div class="result-content">{{ aiResult() }}</div>
+          <div class="result-content" [innerHTML]="aiResult()"></div>
           <div class="result-footer">
             <button mat-stroked-button class="decline-btn" (click)="declineAIContent()">
               <mat-icon>close</mat-icon>
@@ -225,10 +225,123 @@
   <!-- ── Research panel ── -->
   @if (aiPanelTab() === 'research') {
     <div class="tab-content">
-      <div class="info-box">
-        <mat-icon>construction</mat-icon>
-        <p>AI-powered research — coming soon</p>
+      <p class="tab-description">Ask AI, fact-check text, or find related sources</p>
+
+      <!-- Mode selector -->
+      <div class="research-modes">
+        <button class="mode-btn" [class.active]="researchMode() === 'ask'" (click)="researchMode.set('ask'); clearResearch()">
+          <mat-icon>chat</mat-icon>
+          <span>Ask AI</span>
+        </button>
+        <button class="mode-btn" [class.active]="researchMode() === 'factcheck'" (click)="researchMode.set('factcheck'); clearResearch()">
+          <mat-icon>fact_check</mat-icon>
+          <span>Fact-Check</span>
+        </button>
+        <button class="mode-btn" [class.active]="researchMode() === 'sources'" (click)="researchMode.set('sources'); clearResearch()">
+          <mat-icon>menu_book</mat-icon>
+          <span>Sources</span>
+        </button>
       </div>
+
+      <!-- Ask AI -->
+      @if (researchMode() === 'ask') {
+        <mat-form-field appearance="outline" class="full-width prompt-field">
+          <mat-label>Ask a question…</mat-label>
+          <textarea
+            matInput
+            [ngModel]="researchQuery()"
+            (ngModelChange)="researchQuery.set($event)"
+            rows="3"
+            placeholder="E.g., What are the key benefits of remote work?"></textarea>
+        </mat-form-field>
+        <button mat-flat-button class="full-width generate-btn" (click)="runResearch()" [disabled]="isResearching() || !researchQuery()">
+          @if (isResearching()) {
+            <mat-spinner diameter="18"></mat-spinner>
+            <span>Researching…</span>
+          } @else {
+            <ng-container>
+              <mat-icon>send</mat-icon>
+              <span>Ask AI</span>
+            </ng-container>
+          }
+        </button>
+      }
+
+      <!-- Fact-Check -->
+      @if (researchMode() === 'factcheck') {
+        @if (selectedText()) {
+          <div class="selected-text-preview">
+            <span class="label">Text to fact-check:</span>
+            <p>{{ selectedText() }}</p>
+          </div>
+        } @else {
+          <div class="info-box">
+            <mat-icon>info</mat-icon>
+            <p>Select text in the editor, then click Fact-Check below</p>
+          </div>
+        }
+        <button mat-flat-button class="full-width generate-btn" (click)="runResearch()" [disabled]="isResearching()">
+          @if (isResearching()) {
+            <mat-spinner diameter="18"></mat-spinner>
+            <span>Checking…</span>
+          } @else {
+            <ng-container>
+              <mat-icon>fact_check</mat-icon>
+              <span>Fact-Check Selection</span>
+            </ng-container>
+          }
+        </button>
+      }
+
+      <!-- Find Sources -->
+      @if (researchMode() === 'sources') {
+        <mat-form-field appearance="outline" class="full-width prompt-field">
+          <mat-label>Topic or subject…</mat-label>
+          <textarea
+            matInput
+            [ngModel]="researchQuery()"
+            (ngModelChange)="researchQuery.set($event)"
+            rows="2"
+            placeholder="E.g., benefits of remote work for creative teams"></textarea>
+        </mat-form-field>
+        <button mat-flat-button class="full-width generate-btn" (click)="runResearch()" [disabled]="isResearching() || !researchQuery()">
+          @if (isResearching()) {
+            <mat-spinner diameter="18"></mat-spinner>
+            <span>Finding sources…</span>
+          } @else {
+            <ng-container>
+              <mat-icon>menu_book</mat-icon>
+              <span>Find Sources</span>
+            </ng-container>
+          }
+        </button>
+      }
+
+      <!-- Error -->
+      @if (researchError() && !isResearching()) {
+        <div class="ai-error">
+          <mat-icon>error_outline</mat-icon>
+          <span>{{ researchError() }}</span>
+        </div>
+      }
+
+      <!-- Result -->
+      @if (researchResult() && !isResearching()) {
+        <div class="ai-result">
+          <div class="result-header">
+            <span class="result-label">
+              {{ researchMode() === 'ask' ? 'Answer' : researchMode() === 'factcheck' ? 'Verdict' : 'Related Sources' }}
+            </span>
+          </div>
+          <div class="result-content" [innerHTML]="researchResult()"></div>
+          <div class="result-footer">
+            <button mat-stroked-button class="decline-btn" (click)="clearResearch()">
+              <mat-icon>close</mat-icon>
+              Clear
+            </button>
+          </div>
+        </div>
+      }
     </div>
   }
 

@@ -3,7 +3,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #5a6b7d 0%, #3d4d5c 100%);
+  background: linear-gradient(150deg, #4a3728 0%, #6b5040 60%, #7a6b5a 100%);
   padding: 2rem 1rem;
 }
 
@@ -59,11 +59,11 @@
     margin-bottom: 1rem;
 
     &.success {
-      color: #16a34a;
+      color: var(--color-success);
     }
 
     &.error {
-      color: #dc2626;
+      color: var(--color-error);
     }
   }
 

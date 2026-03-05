@@ -92,16 +92,17 @@
 <mat-dialog-actions align="end">
   <button mat-button (click)="cancel()" [disabled]="isSubmitting">Cancel</button>
   <button
-    mat-raised-button
-    color="primary"
+    mat-flat-button
+    class="submit-btn"
     (click)="submit()"
     [disabled]="form.invalid || isSubmitting">
     @if (isSubmitting) {
       <mat-spinner diameter="20"></mat-spinner>
+      <span>Creating…</span>
     } @else {
       <ng-container>
         <mat-icon>add</mat-icon>
-        Create Workspace
+        <span>Create Workspace</span>
       </ng-container>
     }
   </button>

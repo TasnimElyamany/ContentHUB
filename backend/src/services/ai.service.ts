@@ -1,7 +1,7 @@
 import Groq from 'groq-sdk';
 import { User, ContentDocument, AIUsage } from '../models';
 import { ApiError } from '../utils/apiError';
-import { AIGenerateInput, AIEnhanceInput } from '../schemas/ai.schema';
+import { AIGenerateInput, AIEnhanceInput, AIResearchInput } from '../schemas/ai.schema';
 import { config } from '../config';
 import { logger } from '../utils/logger';
 
@@ -91,6 +91,53 @@ class AIService {
       provider: 'groq',
       tokensUsed,
       prompt: data.text,
+      response: result,
+    });
+
+    return {
+      result,
+      tokensUsed,
+      creditsRemaining: user.aiCredits.total - user.aiCredits.used,
+    };
+  }
+
+  async research(
+    userId: string,
+    data: AIResearchInput
+  ): Promise<{ result: string; tokensUsed: number; creditsRemaining: number }> {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw ApiError.notFound('User not found');
+    }
+
+    const creditsNeeded = 15;
+    if (user.aiCredits.used + creditsNeeded > user.aiCredits.total) {
+      throw ApiError.tooManyRequests('Insufficient AI credits');
+    }
+
+    const document = await ContentDocument.findById(data.documentId);
+    if (!document) {
+      throw ApiError.notFound('Document not found');
+    }
+
+    const result = await this.callGroqResearch(data.action, data.query, data.text);
+    const tokensUsed = this.calculateTokens(result);
+
+    user.aiCredits.used += creditsNeeded;
+    await user.save();
+
+    document.aiUsage.improveCalls += 1;
+    document.aiUsage.totalTokens += tokensUsed;
+    await document.save();
+
+    await AIUsage.create({
+      userId,
+      documentId: data.documentId,
+      ...(document.workspace ? { workspaceId: document.workspace } : {}),
+      action: data.action,
+      provider: 'groq',
+      tokensUsed,
+      prompt: data.query || data.text || '',
       response: result,
     });
 
@@ -193,6 +240,49 @@ Do not include any markdown formatting or code blocks. Do not add any commentary
     } catch (error: any) {
       logger.error('Groq enhance error:', error);
       throw ApiError.internal(`AI enhancement failed: ${error.message}`);
+    }
+  }
+
+  private async callGroqResearch(
+    action: string,
+    query?: string,
+    text?: string
+  ): Promise<string> {
+    const systemPrompts: Record<string, string> = {
+      ask: `You are a knowledgeable research assistant. Answer the user's question clearly and concisely.
+Return the answer as clean HTML using <p>, <strong>, <ul>, <li> tags as appropriate.
+Do not include markdown formatting or code blocks.`,
+
+      factcheck: `You are a fact-checking assistant. Analyze the provided text for factual accuracy.
+Return clean HTML with exactly this structure:
+1. A verdict line: <p><strong>Verdict:</strong> Likely Accurate | Partially Accurate | Unverifiable | Likely Inaccurate</p>
+2. One or two <p> paragraphs explaining your reasoning.
+Do not include markdown or code blocks.`,
+
+      sources: `You are a research assistant. Suggest 4–6 relevant sources for the given topic based on your knowledge.
+Return clean HTML as a <ul> list. Each <li> should contain: <strong>Source/Publication Title</strong> – brief description of what it covers.
+Do not invent URLs. Do not include markdown or code blocks.`,
+    };
+
+    try {
+      const completion = await groq.chat.completions.create({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: systemPrompts[action] || systemPrompts.ask },
+          { role: 'user', content: query || text || '' },
+        ],
+        max_tokens: 1000,
+        temperature: 0.3,
+      });
+
+      const result = completion.choices[0]?.message?.content;
+      if (!result) {
+        throw new Error('No response from AI');
+      }
+      return result;
+    } catch (error: any) {
+      logger.error('Groq research error:', error);
+      throw ApiError.internal(`AI research failed: ${error.message}`);
     }
   }
 

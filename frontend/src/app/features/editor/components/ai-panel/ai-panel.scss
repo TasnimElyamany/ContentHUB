@@ -25,15 +25,14 @@
   }
 }
 
-// ─── Tab strip ───────────────────────────────────────────────────────────────
-
+// ─── Tab strip
 .tab-strip {
   display: flex;
   border-bottom: 1px solid var(--color-border-light);
   background: var(--color-surface-elevated);
   padding: 0 0.25rem;
   position: sticky;
-  top: 53px;   // just below the sticky sidebar-header
+  top: 53px;
   z-index: 15;
 }
 
@@ -234,12 +233,16 @@
   border-radius: 8px !important;
   font-weight: 600;
   margin-bottom: 0.75rem;
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  justify-content: center;
   box-shadow: 0 2px 8px rgba(134, 104, 212, 0.3);
   transition: box-shadow 150ms ease, opacity 150ms ease !important;
+
+  // Icon + text alignment inside MDC button label wrapper
+  ::ng-deep .mdc-button__label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+  }
 
   &:hover:not([disabled]) {
     opacity: 0.9;
@@ -248,8 +251,8 @@
 
   &[disabled] { opacity: 0.55; box-shadow: none !important; }
 
-  mat-spinner { margin-right: 0.25rem; }
-  mat-icon { font-size: 18px; }
+  mat-spinner { flex-shrink: 0; }
+  mat-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; }
 }
 
 // ─── Attempts summary
@@ -363,6 +366,7 @@
       border-color: var(--color-border) !important;
       border-radius: 6px !important;
       font-size: 0.8rem;
+      ::ng-deep .mdc-button__label { display: flex; align-items: center; gap: 0.25rem; }
       &:hover { color: var(--color-error) !important; border-color: var(--color-error) !important; }
     }
 
@@ -374,6 +378,7 @@
       border-radius: 6px !important;
       font-weight: 600;
       font-size: 0.8rem;
+      ::ng-deep .mdc-button__label { display: flex; align-items: center; gap: 0.25rem; }
     }
   }
 }
@@ -433,7 +438,6 @@
   margin-bottom: 0.75rem;
 
   .action-btn {
-    justify-content: flex-start;
     text-align: left;
     font-size: 0.875rem;
     border-radius: 8px !important;
@@ -441,13 +445,67 @@
     border-color: var(--color-border) !important;
     transition: color 120ms ease, border-color 120ms ease, background 120ms ease !important;
 
-    mat-icon { margin-right: 0.625rem; }
+    // Icon + text alignment inside MDC button label wrapper
+    ::ng-deep .mdc-button__label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    mat-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; }
 
     &:hover:not([disabled]) {
       color: var(--color-ws) !important;
       border-color: var(--color-ws) !important;
       background: var(--color-ws-bg) !important;
     }
+  }
+}
+
+// ─── Research mode selector ───────────────────────────────────────────────────
+.research-modes {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.mode-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.25rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: 8px;
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+  white-space: nowrap;
+
+  mat-icon {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+    line-height: 16px !important;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    color: var(--color-ws);
+    border-color: var(--color-ws);
+  }
+
+  &.active {
+    color: var(--color-ws);
+    border-color: var(--color-ws);
+    background: var(--color-ws-bg, rgba(124, 58, 237, 0.06));
+    font-weight: 600;
   }
 }
 

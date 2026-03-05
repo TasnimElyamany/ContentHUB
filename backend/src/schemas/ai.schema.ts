@@ -18,5 +18,18 @@ export const aiEnhanceSchema = z.object({
   }),
 });
 
+export const aiResearchSchema = z.object({
+  body: z.object({
+    action: z.enum(['ask', 'factcheck', 'sources']),
+    query: z.string().max(2000).optional(),
+    text: z.string().max(5000).optional(),
+    documentId: z.string().min(1, 'Document ID is required'),
+  }).refine(
+    (d) => (d.action === 'factcheck' ? !!d.text : !!d.query),
+    { message: 'query required for ask/sources; text required for factcheck' }
+  ),
+});
+
 export type AIGenerateInput = z.infer<typeof aiGenerateSchema>['body'];
 export type AIEnhanceInput = z.infer<typeof aiEnhanceSchema>['body'];
+export type AIResearchInput = z.infer<typeof aiResearchSchema>['body'];
