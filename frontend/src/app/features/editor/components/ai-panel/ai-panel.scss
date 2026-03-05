@@ -233,12 +233,16 @@
   border-radius: 8px !important;
   font-weight: 600;
   margin-bottom: 0.75rem;
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  justify-content: center;
   box-shadow: 0 2px 8px rgba(134, 104, 212, 0.3);
   transition: box-shadow 150ms ease, opacity 150ms ease !important;
+
+  // Icon + text alignment inside MDC button label wrapper
+  ::ng-deep .mdc-button__label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+  }
 
   &:hover:not([disabled]) {
     opacity: 0.9;
@@ -247,8 +251,8 @@
 
   &[disabled] { opacity: 0.55; box-shadow: none !important; }
 
-  mat-spinner { margin-right: 0.25rem; }
-  mat-icon { font-size: 18px; }
+  mat-spinner { flex-shrink: 0; }
+  mat-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; }
 }
 
 // ─── Attempts summary
@@ -362,6 +366,7 @@
       border-color: var(--color-border) !important;
       border-radius: 6px !important;
       font-size: 0.8rem;
+      ::ng-deep .mdc-button__label { display: flex; align-items: center; gap: 0.25rem; }
       &:hover { color: var(--color-error) !important; border-color: var(--color-error) !important; }
     }
 
@@ -373,6 +378,7 @@
       border-radius: 6px !important;
       font-weight: 600;
       font-size: 0.8rem;
+      ::ng-deep .mdc-button__label { display: flex; align-items: center; gap: 0.25rem; }
     }
   }
 }
@@ -432,7 +438,6 @@
   margin-bottom: 0.75rem;
 
   .action-btn {
-    justify-content: flex-start;
     text-align: left;
     font-size: 0.875rem;
     border-radius: 8px !important;
@@ -440,7 +445,14 @@
     border-color: var(--color-border) !important;
     transition: color 120ms ease, border-color 120ms ease, background 120ms ease !important;
 
-    mat-icon { margin-right: 0.625rem; }
+    // Icon + text alignment inside MDC button label wrapper
+    ::ng-deep .mdc-button__label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    mat-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; }
 
     &:hover:not([disabled]) {
       color: var(--color-ws) !important;

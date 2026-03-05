@@ -11,7 +11,7 @@
   position: sticky;
   top: 0;
   z-index: 200;
-  background: var(--color-surface-elevated) !important;
+  background: var(--color-sidebar) !important;
   color: var(--color-text-primary) !important;
   border-bottom: 1px solid var(--color-border);
   box-shadow: none;
@@ -27,11 +27,12 @@
     .logo-icon {
       width: 32px;
       height: 32px;
-      background: var(--color-ws);
+      background: linear-gradient(135deg, #c47c38 0%, #7a6b5a 100%);
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
+      box-shadow: 0 2px 6px rgba(196, 124, 56, 0.3);
 
       mat-icon {
         font-size: 18px;
@@ -64,7 +65,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--color-ws);
+  background: linear-gradient(135deg, #c47c38 0%, #7a6b5a 100%);
   color: #fff;
   display: flex;
   align-items: center;
@@ -126,8 +127,8 @@
   align-items: center;
   margin-bottom: 2rem;
   padding: 1.75rem 2rem;
-  background: linear-gradient(135deg, var(--color-ws-bg) 0%, var(--color-surface-elevated) 100%);
-  border: 1px solid rgba(134, 104, 212, 0.15);
+  background: linear-gradient(135deg, rgba(196, 124, 56, 0.07) 0%, var(--color-surface-elevated) 100%);
+  border: 1px solid rgba(196, 124, 56, 0.15);
   border-radius: 16px;
   gap: 1rem;
 
@@ -148,7 +149,7 @@
   }
 
   .create-btn {
-    background: var(--color-ws) !important;
+    background: var(--color-accent) !important;
     color: #fff !important;
     border-radius: 10px !important;
     font-weight: 600;
@@ -156,10 +157,20 @@
     padding: 0 1.25rem !important;
     height: 40px;
     flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(196, 124, 56, 0.3);
 
-    &:hover:not(:disabled) { background: var(--color-ws-dark) !important; }
+    ::ng-deep .mdc-button__label {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
 
-    mat-icon { font-size: 18px; margin-right: 0.25rem; }
+    &:hover:not(:disabled) {
+      background: var(--color-accent-dark) !important;
+      box-shadow: 0 4px 12px rgba(196, 124, 56, 0.4) !important;
+    }
+
+    mat-icon { font-size: 18px; width: 18px; height: 18px; }
   }
 }
 
@@ -209,8 +220,8 @@
     width: 80px;
     height: 80px;
     border-radius: 20px;
-    background: var(--color-ws-bg);
-    border: 1px solid rgba(134, 104, 212, 0.2);
+    background: rgba(196, 124, 56, 0.09);
+    border: 1px solid rgba(196, 124, 56, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -220,7 +231,7 @@
       font-size: 40px;
       width: 40px;
       height: 40px;
-      color: var(--color-ws);
+      color: var(--color-accent);
     }
   }
 
@@ -239,17 +250,27 @@
   }
 
   .create-btn {
-    background: var(--color-ws) !important;
+    background: var(--color-accent) !important;
     color: #fff !important;
     border-radius: 10px !important;
     font-weight: 600;
     font-size: 0.875rem;
     padding: 0 1.5rem !important;
     height: 42px;
+    box-shadow: 0 2px 8px rgba(196, 124, 56, 0.3);
 
-    &:hover:not(:disabled) { background: var(--color-ws-dark) !important; }
+    ::ng-deep .mdc-button__label {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
 
-    mat-icon { font-size: 18px; margin-right: 0.25rem; }
+    &:hover:not(:disabled) {
+      background: var(--color-accent-dark) !important;
+      box-shadow: 0 4px 12px rgba(196, 124, 56, 0.4) !important;
+    }
+
+    mat-icon { font-size: 18px; width: 18px; height: 18px; }
   }
 }
 
@@ -277,8 +298,8 @@
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(134, 104, 212, 0.12);
-    border-color: rgba(134, 104, 212, 0.3);
+    box-shadow: 0 6px 20px rgba(196, 124, 56, 0.12);
+    border-color: rgba(196, 124, 56, 0.3);
   }
 
   // ── Top row ──────────────────────────────────────────────────────────────────
@@ -293,13 +314,13 @@
       height: 44px;
       min-width: 44px;
       border-radius: 12px;
-      background: linear-gradient(135deg, var(--color-ws) 0%, var(--color-ws-dark) 100%);
+      background: linear-gradient(135deg, #c47c38 0%, #7a6b5a 100%);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 1.375rem;
       line-height: 1;
-      box-shadow: 0 2px 8px rgba(134, 104, 212, 0.35);
+      box-shadow: 0 2px 8px rgba(196, 124, 56, 0.35);
     }
 
     .card-meta {
@@ -326,9 +347,9 @@
         text-transform: uppercase;
 
         &.role-owner {
-          background: var(--color-ws-bg);
-          color: var(--color-ws-dark);
-          border: 1px solid rgba(134, 104, 212, 0.25);
+          background: rgba(196, 124, 56, 0.1);
+          color: var(--color-accent-dark);
+          border: 1px solid rgba(196, 124, 56, 0.25);
         }
 
         &.role-admin {
@@ -418,9 +439,9 @@
       }
 
       &.chip-ai {
-        background: var(--color-ws-bg);
-        color: var(--color-ws-dark);
-        border: 1px solid rgba(134, 104, 212, 0.2);
+        background: rgba(196, 124, 56, 0.1);
+        color: var(--color-accent-dark);
+        border: 1px solid rgba(196, 124, 56, 0.2);
       }
 
       &.chip-approval {

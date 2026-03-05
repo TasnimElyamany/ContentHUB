@@ -5,13 +5,16 @@
       <mat-icon>arrow_back</mat-icon>
     </button>
 
-    <input
-      [ngModel]="title()"
-      (ngModelChange)="title.set($event); OnTitleChanged()"
-      (focus)="onTitleFocus($event)"
-      (blur)="onTitleBlur()"
-      class="document-title"
-      placeholder="Untitled Document">
+    <div class="title-group">
+      <mat-icon class="title-icon">description</mat-icon>
+      <input
+        [ngModel]="title()"
+        (ngModelChange)="title.set($event); OnTitleChanged()"
+        (focus)="onTitleFocus($event)"
+        (blur)="onTitleBlur()"
+        class="document-title"
+        placeholder="Untitled Document">
+    </div>
 
     <span class="spacer"></span>
 

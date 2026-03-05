@@ -1,14 +1,19 @@
 <div class="landing-container">
-  <mat-toolbar class="navbar" color="primary">
+  <mat-toolbar class="navbar">
     <div class="navbar-content">
       <div class="logo">
-        <mat-icon class="logo-icon">article</mat-icon>
-        <span class="logo-text">ContentHub AI</span>
+        <div class="logo-badge">
+          <mat-icon>edit_note</mat-icon>
+        </div>
+        <div class="logo-wordmark">
+          <span class="logo-name">ContentHub</span>
+          <span class="logo-ai">AI</span>
+        </div>
       </div>
 
       <div class="nav-actions">
         <button mat-button routerLink="/auth/login">Sign In</button>
-        <button mat-raised-button color="accent" routerLink="/auth/register">
+        <button mat-raised-button class="nav-cta-btn" routerLink="/auth/register">
           Get Started Free
         </button>
       </div>
@@ -33,7 +38,7 @@
       </p>
 
       <div class="hero-actions">
-        <button mat-raised-button color="primary" class="cta-button" routerLink="/auth/register">
+        <button mat-raised-button class="cta-button" routerLink="/auth/register">
           <mat-icon>rocket_launch</mat-icon>
           Start Writing for Free
         </button>
@@ -44,10 +49,12 @@
       </div>
 
       <div class="hero-stats">
-        <div class="stat-item" *ngFor="let stat of stats">
-          <div class="stat-value">{{ stat.value }}</div>
-          <div class="stat-label">{{ stat.label }}</div>
-        </div>
+        @for (stat of stats; track stat.label) {
+          <div class="stat-item">
+            <div class="stat-value">{{ stat.value }}</div>
+            <div class="stat-label">{{ stat.label }}</div>
+          </div>
+        }
       </div>
     </div>
 
@@ -84,19 +91,19 @@
     </div>
 
     <div class="features-grid">
-      <mat-card class="feature-card" *ngFor="let feature of features">
-        <div class="feature-icon-wrapper" [style.background]="feature.color + '15'">
-          <mat-icon class="feature-icon" [style.color]="feature.color">
-            {{ feature.icon }}
-          </mat-icon>
-        </div>
-        <mat-card-header>
-          <mat-card-title>{{ feature.title }}</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <p>{{ feature.description }}</p>
-        </mat-card-content>
-      </mat-card>
+      @for (feature of features; track feature.title) {
+        <mat-card class="feature-card">
+          <div class="feature-icon-wrapper" [style.background]="feature.color + '15'">
+            <mat-icon class="feature-icon" [style.color]="feature.color">{{ feature.icon }}</mat-icon>
+          </div>
+          <mat-card-header>
+            <mat-card-title>{{ feature.title }}</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p>{{ feature.description }}</p>
+          </mat-card-content>
+        </mat-card>
+      }
     </div>
   </section>
 
@@ -108,10 +115,12 @@
     </div>
 
     <div class="use-cases-grid">
-      <div class="use-case-chip" *ngFor="let useCase of useCases">
-        <mat-icon>{{ useCase.icon }}</mat-icon>
-        <span>{{ useCase.title }}</span>
-      </div>
+      @for (useCase of useCases; track useCase.title) {
+        <div class="use-case-chip">
+          <mat-icon>{{ useCase.icon }}</mat-icon>
+          <span>{{ useCase.title }}</span>
+        </div>
+      }
     </div>
   </section>
 
@@ -123,7 +132,7 @@
         Join thousands of content creators who are already using AI to write better, faster.
       </p>
       <div class="cta-actions">
-        <button mat-raised-button color="accent" class="cta-button-large" routerLink="/auth/register">
+        <button mat-raised-button class="cta-button-large" routerLink="/auth/register">
           <mat-icon>rocket_launch</mat-icon>
           Get Started Free - No Credit Card Required
         </button>

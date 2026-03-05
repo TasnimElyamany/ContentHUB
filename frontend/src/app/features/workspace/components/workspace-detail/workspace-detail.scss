@@ -1,6 +1,6 @@
 .workspace-detail-container {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background: var(--color-surface);
 }
 
 .top-toolbar {
@@ -40,7 +40,7 @@
 
     .user-email {
       font-size: 0.875rem;
-      color: rgba(0, 0, 0, 0.6);
+      color: var(--color-text-muted);
     }
   }
 }
@@ -58,13 +58,13 @@
     font-size: 64px;
     width: 64px;
     height: 64px;
-    color: #f44336;
+    color: var(--color-error);
     margin-bottom: 16px;
   }
 
   p {
     margin: 16px 0 24px;
-    color: rgba(0, 0, 0, 0.6);
+    color: var(--color-text-secondary);
   }
 }
 
@@ -79,10 +79,11 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 32px;
-  background: white;
+  background: var(--color-surface-elevated);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--color-border-light);
+  box-shadow: var(--shadow-sm);
 
   .header-info {
     display: flex;
@@ -94,21 +95,23 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #c47c38 0%, #7a6b5a 100%);
       border-radius: 16px;
       font-size: 40px;
+      box-shadow: 0 4px 12px rgba(196, 124, 56, 0.3);
     }
 
     .header-text {
       h1 {
         margin: 0 0 8px;
         font-size: 1.75rem;
-        font-weight: 500;
+        font-weight: 600;
+        color: var(--color-text-primary);
       }
 
       .description {
         margin: 0 0 16px;
-        color: rgba(0, 0, 0, 0.6);
+        color: var(--color-text-secondary);
         max-width: 500px;
       }
 
@@ -120,7 +123,7 @@
           display: flex;
           align-items: center;
           gap: 8px;
-          color: rgba(0, 0, 0, 0.6);
+          color: var(--color-text-muted);
           font-size: 0.875rem;
 
           mat-icon {
@@ -135,9 +138,10 @@
 }
 
 .workspace-tabs {
-  background: white;
+  background: var(--color-surface-elevated);
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--color-border-light);
+  box-shadow: var(--shadow-sm);
 }
 
 .tab-content {
@@ -156,18 +160,19 @@
     font-size: 64px;
     width: 64px;
     height: 64px;
-    color: rgba(0, 0, 0, 0.3);
+    color: var(--color-text-muted);
     margin-bottom: 16px;
   }
 
   h2 {
     margin: 0 0 8px;
-    font-weight: 500;
+    font-weight: 600;
+    color: var(--color-text-primary);
   }
 
   p {
     margin: 0 0 24px;
-    color: rgba(0, 0, 0, 0.6);
+    color: var(--color-text-secondary);
   }
 }
 
@@ -179,16 +184,17 @@
 
 .document-card {
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(196, 124, 56, 0.12) !important;
+    border-color: rgba(196, 124, 56, 0.25) !important;
   }
 
   mat-card-content {
     .document-preview {
-      color: rgba(0, 0, 0, 0.6);
+      color: var(--color-text-secondary);
       margin: 0 0 16px;
       display: -webkit-box;
       -webkit-line-clamp: 2;
@@ -222,7 +228,8 @@
   h3 {
     margin: 0;
     font-size: 1.25rem;
-    font-weight: 500;
+    font-weight: 600;
+    color: var(--color-text-primary);
   }
 }
 
@@ -232,7 +239,7 @@
     align-items: center;
     gap: 16px;
     padding: 16px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    border-bottom: 1px solid var(--color-border-light);
 
     &:last-child {
       border-bottom: none;
@@ -242,14 +249,17 @@
       width: 48px;
       height: 48px;
       border-radius: 50%;
-      background-color: #e0e0e0;
+      background: linear-gradient(135deg, #c47c38 0%, #7a6b5a 100%);
       display: flex;
       align-items: center;
       justify-content: center;
+      color: #fff;
+      font-size: 0.875rem;
+      font-weight: 700;
 
       mat-icon {
         font-size: 24px;
-        color: rgba(0, 0, 0, 0.54);
+        color: #fff;
       }
     }
 
@@ -259,12 +269,13 @@
       .member-name {
         display: block;
         font-weight: 500;
+        color: var(--color-text-primary);
       }
 
       .member-email {
         display: block;
         font-size: 0.875rem;
-        color: rgba(0, 0, 0, 0.6);
+        color: var(--color-text-muted);
       }
     }
 
@@ -272,8 +283,9 @@
       text-transform: capitalize;
 
       &.owner {
-        background-color: #fff3e0;
-        color: #e65100;
+        background: rgba(196, 124, 56, 0.1);
+        color: var(--color-accent-dark);
+        border: 1px solid rgba(196, 124, 56, 0.25);
       }
     }
   }

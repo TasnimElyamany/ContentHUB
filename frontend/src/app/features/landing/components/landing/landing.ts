@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -11,7 +10,6 @@ import { MatChipsModule } from '@angular/material/chips';
   selector: 'app-landing',
   standalone: true,
   imports: [
-    CommonModule,
     RouterLink,
     MatButtonModule,
     MatToolbarModule,
@@ -28,37 +26,37 @@ export class Landing {
       icon: 'auto_awesome',
       title: 'AI-Powered Writing',
       description: 'Generate high-quality content instantly with advanced AI. Get suggestions, improvements, and creative ideas on demand.',
-      color: '#6366f1'
+      color: '#c47c38'
     },
     {
       icon: 'groups',
       title: 'Real-Time Collaboration',
       description: 'Work together seamlessly with your team. See changes in real-time, add comments, and collaborate effortlessly.',
-      color: '#8b5cf6'
+      color: '#8668d4'
     },
     {
       icon: 'analytics',
       title: 'Smart Analytics',
       description: 'Track your productivity, monitor AI usage, and gain insights into your content creation workflow.',
-      color: '#ec4899'
+      color: '#7a6b5a'
     },
     {
       icon: 'workspace_premium',
       title: 'Team Workspaces',
       description: 'Organize your projects with dedicated workspaces. Manage permissions and keep everything organized.',
-      color: '#14b8a6'
+      color: '#a06b3a'
     },
     {
       icon: 'edit_note',
       title: 'Rich Text Editor',
       description: 'Professional editing tools with formatting, images, links, and more. Everything you need to create beautiful content.',
-      color: '#f59e0b'
+      color: '#9d8e80'
     },
     {
       icon: 'speed',
       title: 'Lightning Fast',
       description: 'Built with modern technology for blazing-fast performance. Auto-save ensures you never lose your work.',
-      color: '#10b981'
+      color: '#5c8f6a'
     }
   ];
 
