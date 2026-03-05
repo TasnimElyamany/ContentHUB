@@ -236,7 +236,6 @@
   box-shadow: 0 2px 8px rgba(134, 104, 212, 0.3);
   transition: box-shadow 150ms ease, opacity 150ms ease !important;
 
-  // Icon + text alignment inside MDC button label wrapper
   ::ng-deep .mdc-button__label {
     display: flex;
     align-items: center;
@@ -383,8 +382,6 @@
   }
 }
 
-// enhnace
-
 .info-box {
   display: flex;
   flex-direction: column;
@@ -445,7 +442,6 @@
     border-color: var(--color-border) !important;
     transition: color 120ms ease, border-color 120ms ease, background 120ms ease !important;
 
-    // Icon + text alignment inside MDC button label wrapper
     ::ng-deep .mdc-button__label {
       display: flex;
       align-items: center;

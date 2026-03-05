@@ -13,9 +13,8 @@
   z-index: 100;
   padding: 0 0.5rem;
   gap: 0.25rem;
-  background: var(--color-sidebar) !important; // warm parchment — overrides global white
+  background: var(--color-sidebar) !important;
 
-  // Title group — icon + editable name
   .title-group {
     display: flex;
     align-items: center;
@@ -242,7 +241,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--color-surface-muted);  // warm linen "desk" behind the document
+  background: var(--color-surface-muted);
 }
 
 .editor-wrapper {
@@ -259,7 +258,7 @@
     // Formatting toolbar — sticky at the top of the wrapper
     ::ng-deep .ql-toolbar {
       position: sticky;
-      top: -2.5rem; // counteract wrapper padding so it sticks to viewport top
+      top: -2.5rem;
       z-index: 10;
       border: none;
       background: var(--color-surface-elevated);
