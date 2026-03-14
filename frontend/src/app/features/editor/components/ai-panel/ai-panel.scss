@@ -142,7 +142,7 @@
   padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 0.125rem;
 
   .tab-description {
     color: var(--color-text-secondary);
@@ -343,13 +343,18 @@
   }
 
   .result-content {
-    padding: 0.875rem;
+    padding: 1rem 0.875rem;
     background: var(--color-surface-elevated);
-    max-height: 220px;
-    overflow-y: auto;
     font-size: 0.875rem;
-    line-height: 1.6;
+    line-height: 1.7;
     color: var(--color-text-primary);
+
+    ::ng-deep {
+      p { margin: 0 0 0.75rem; &:last-child { margin-bottom: 0; } }
+      ul, ol { margin: 0 0 0.75rem; padding-left: 1.25rem; }
+      li { margin-bottom: 0.25rem; }
+      strong { color: var(--color-text-primary); font-weight: 600; }
+    }
   }
 
   .result-footer {
@@ -422,6 +427,7 @@
     line-height: 1.5;
     display: -webkit-box;
     -webkit-line-clamp: 4;
+    line-clamp: 4;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
