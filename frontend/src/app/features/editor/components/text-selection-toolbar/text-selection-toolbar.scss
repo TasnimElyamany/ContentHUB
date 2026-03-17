@@ -1,0 +1,56 @@
+.selection-toolbar {
+  position: fixed;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border-light);
+  border-radius: 10px;
+  padding: 4px 6px;
+  box-shadow: 0 4px 20px rgba(45, 42, 38, 0.14);
+  animation: toolbar-in 0.12s ease;
+
+  @keyframes toolbar-in {
+    from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0);   }
+  }
+}
+
+.sel-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+
+  mat-icon {
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
+    transition: color 0.12s;
+  }
+
+  &:hover {
+    background: rgba(196, 124, 56, 0.08);
+    color: var(--color-accent);
+
+    mat-icon { color: var(--color-accent); }
+  }
+}
+
+.sep {
+  width: 1px;
+  height: 20px;
+  background: var(--color-border-light);
+  margin: 0 2px;
+}

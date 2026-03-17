@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, HostListener, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -19,6 +19,7 @@ import { DocumentService } from '../../../dashboard/services/document';
 import { Document } from '../../../../models/document.model';
 import { CommentsSidebar } from '../comments-sidebar/comments-sidebar';
 import { AiPanel } from '../ai-panel/ai-panel';
+import { TextSelectionToolbar } from '../text-selection-toolbar/text-selection-toolbar';
 import {
   ConfirmDialogComponent,
   ConfirmDialogData,
@@ -41,6 +42,7 @@ import {
     MatMenuModule,
     CommentsSidebar,
     AiPanel,
+    TextSelectionToolbar,
   ],
   templateUrl: './editor.html',
   styleUrl: './editor.scss',
@@ -51,6 +53,8 @@ export class Editor implements OnInit, OnDestroy {
   private documentService = inject(DocumentService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+
+  @ViewChild(AiPanel) aiPanelRef?: AiPanel;
 
   private destroy$ = new Subject<void>();
   private saveSubject$ = new Subject<void>();
@@ -182,9 +186,6 @@ export class Editor implements OnInit, OnDestroy {
   }
 
   OnContentChanged(_event: any): void {
-    // Do NOT update the content signal here — doing so causes a feedback loop:
-    // content.set() → [ngModel] updates → ngx-quill writeValue → text-change → ngModelChange → repeat.
-    // The debounce timer would never fire. Instead, read live content from the Quill instance.
     this.saveStatus.set('unsaved');
     this.saveSubject$.next();
   }
@@ -352,7 +353,8 @@ export class Editor implements OnInit, OnDestroy {
     return name.replace(/[^a-z0-9_\- ]/gi, '_').trim() || 'document';
   }
 
-  // ─── Publish ───────────────────────────────────────────────────────────────
+  //publish / unpublish
+  // we will modify this soon to be production ready
 
   publishDocument(): void {
     const doc = this.document();
@@ -383,7 +385,7 @@ export class Editor implements OnInit, OnDestroy {
     });
   }
 
-  // ─── Share ─────────────────────────────────────────────────────────────────
+  // share
 
   copyDocumentLink(): void {
     navigator.clipboard.writeText(window.location.href).then(() => {
@@ -395,7 +397,7 @@ export class Editor implements OnInit, OnDestroy {
     this.snackBar.open('Share via email - coming soon!', 'Close', { duration: 3000 });
   }
 
-  // ─── Comments ──────────────────────────────────────────────────────────────
+  // comments
 
   toggleComments(): void {
     this.showComments.update((v) => !v);
@@ -405,7 +407,12 @@ export class Editor implements OnInit, OnDestroy {
     this.commentCount.set(count);
   }
 
-  // ─── AI Panel ──────────────────────────────────────────────────────────────
+  // AI panel
+
+  onSelectionAction(event: { action: string; text: string; range: { index: number; length: number } }): void {
+    this.showAIPanel.set(true);
+    setTimeout(() => this.aiPanelRef?.triggerEnhance(event.action, event.text, event.range), 0);
+  }
 
   toggleAIPanel(): void {
     this.showAIPanel.update((v) => !v);
@@ -416,13 +423,13 @@ export class Editor implements OnInit, OnDestroy {
     this.saveSubject$.next();
   }
 
-  // ─── Navigation ────────────────────────────────────────────────────────────
+  // navigation back
 
   goBack(): void {
     this.router.navigate(['/dashboard']);
   }
 
-  // ─── Stats ─────────────────────────────────────────────────────────────────
+  // stats for doc
 
   get wordCount(): number {
     const text = (this.quillInstance?.root.innerHTML ?? this.content()).replace(/<[^>]*>/g, '');

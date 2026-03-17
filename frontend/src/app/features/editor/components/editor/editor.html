@@ -117,6 +117,12 @@
 
     <!-- Editor -->
     <div class="editor-main">
+      <!-- Floating text selection toolbar -->
+      <app-text-selection-toolbar
+        [quillInstance]="quillInstance"
+        (actionTriggered)="onSelectionAction($event)">
+      </app-text-selection-toolbar>
+
       <div class="editor-wrapper">
         <quill-editor
           [ngModel]="content()"

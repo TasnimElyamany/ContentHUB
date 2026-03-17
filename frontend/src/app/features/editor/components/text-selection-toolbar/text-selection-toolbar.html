@@ -1,0 +1,16 @@
+@if (isVisible()) {
+  <div class="selection-toolbar" [style.top.px]="position().top" [style.left.px]="position().left">
+    @for (action of actions; track action.key) {
+      <button
+        class="sel-btn"
+        [matTooltip]="action.label"
+        (mousedown)="trigger($event, action.key)">
+        <mat-icon>{{ action.icon }}</mat-icon>
+        <span>{{ action.label }}</span>
+      </button>
+      @if (action.key === 'shorten') {
+        <div class="sep"></div>
+      }
+    }
+  </div>
+}
