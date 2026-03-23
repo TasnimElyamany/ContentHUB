@@ -289,6 +289,16 @@ export class AiPanel implements OnInit {
     });
   }
 
+  triggerQuickstart(tab: 'generate' | 'research', prompt?: string): void {
+    this.aiPanelTab.set(tab);
+    if (tab === 'generate' && prompt) {
+      this.aiPrompt.set(prompt);
+    }
+    if (tab === 'research') {
+      this.researchMode.set('ask');
+    }
+  }
+
   triggerEnhance(action: string, text: string, range: { index: number; length: number }): void {
     this.aiPanelTab.set('enhance');
     this.selectedText.set(text);

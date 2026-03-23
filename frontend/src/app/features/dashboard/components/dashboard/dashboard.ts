@@ -171,6 +171,19 @@ export class Dashboard implements OnInit {
     this.router.navigate(['/editor', documentId]);
   }
 
+  unpublishDocument(documentId: string, event: Event): void {
+    event.stopPropagation();
+    this.documentService.updateDocument(documentId, { status: 'draft' }).subscribe({
+      next: () => {
+        this.documents.update((docs) =>
+          docs.map((d) => d._id === documentId ? { ...d, status: 'draft' as any } : d)
+        );
+        this.snackbar.open('Document moved to draft', 'Dismiss', { duration: 3000 });
+      },
+      error: () => this.snackbar.open('Failed to unpublish.', 'Close', { duration: 3000 }),
+    });
+  }
+
   deleteDocument(documentId: string, event: Event): void {
     event.stopPropagation();
     const data: ConfirmDialogData = {

@@ -20,6 +20,7 @@ import { Document } from '../../../../models/document.model';
 import { CommentsSidebar } from '../comments-sidebar/comments-sidebar';
 import { AiPanel } from '../ai-panel/ai-panel';
 import { TextSelectionToolbar } from '../text-selection-toolbar/text-selection-toolbar';
+import { SlashCommandPalette } from '../slash-command-palette/slash-command-palette';
 import {
   ConfirmDialogComponent,
   ConfirmDialogData,
@@ -43,6 +44,7 @@ import {
     CommentsSidebar,
     AiPanel,
     TextSelectionToolbar,
+    SlashCommandPalette,
   ],
   templateUrl: './editor.html',
   styleUrl: './editor.scss',
@@ -409,9 +411,28 @@ export class Editor implements OnInit, OnDestroy {
 
   // AI panel
 
+  onSlashCommand(event: { command: string }): void {
+    this.quickstartAI(event.command);
+  }
+
   onSelectionAction(event: { action: string; text: string; range: { index: number; length: number } }): void {
     this.showAIPanel.set(true);
     setTimeout(() => this.aiPanelRef?.triggerEnhance(event.action, event.text, event.range), 0);
+  }
+
+  quickstartAI(type: string): void {
+    this.showAIPanel.set(true);
+    const configs: Record<string, { tab: 'generate' | 'research'; prompt?: string }> = {
+      'ask':           { tab: 'generate' },
+      'meeting-notes': { tab: 'generate', prompt: 'Generate structured meeting notes with agenda, attendees, discussion points, and action items.' },
+      'research':      { tab: 'research' },
+      'content-brief': { tab: 'generate', prompt: `Create a content brief for "${this.title()}" including target audience, key messages, tone, and outline.` },
+      'outline':       { tab: 'generate', prompt: `Create a detailed outline for "${this.title()}".` },
+      'summarize':     { tab: 'generate', prompt: 'Provide a concise summary of this document.' },
+    };
+    const config = configs[type];
+    if (!config) return;
+    setTimeout(() => this.aiPanelRef?.triggerQuickstart(config.tab, config.prompt), 0);
   }
 
   toggleAIPanel(): void {

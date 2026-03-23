@@ -1,0 +1,29 @@
+@if (lineHintVisible() && !isVisible()) {
+  <span class="line-hint"
+    [style.top.px]="lineHintPosition().top"
+    [style.left.px]="lineHintPosition().left">
+    Type / for commands
+  </span>
+}
+
+@if (isVisible() && filteredCommands().length > 0) {
+  <div class="slash-palette" [style.top.px]="position().top" [style.left.px]="position().left">
+    @for (group of groupedCommands(); track group.name) {
+      <div class="cmd-group-label">{{ group.name }}</div>
+      @for (cmd of group.commands; track cmd.key) {
+        <button
+          class="cmd-item"
+          [class.active]="selectedIndex() === cmd.globalIndex"
+          (mousedown)="execute($event, cmd)">
+          <span class="cmd-icon">
+            <mat-icon>{{ cmd.icon }}</mat-icon>
+          </span>
+          <span class="cmd-text">
+            <span class="cmd-label">{{ cmd.label }}</span>
+            <span class="cmd-desc">{{ cmd.desc }}</span>
+          </span>
+        </button>
+      }
+    }
+  </div>
+}
