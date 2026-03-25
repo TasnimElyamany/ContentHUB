@@ -6,9 +6,9 @@ export interface TokenPayload {
   email: string;
 }
 
-export const generateToken = (payload: TokenPayload): string => {
+export const generateToken = (payload: TokenPayload, expiresIn?: string): string => {
   return jwt.sign(payload, config.jwt.secret, {
-    expiresIn: config.jwt.expiresIn,
+    expiresIn: expiresIn ?? config.jwt.expiresIn,
   });
 };
 

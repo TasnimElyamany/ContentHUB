@@ -130,7 +130,7 @@ export class SlashCommandPalette implements OnChanges, OnDestroy {
         requestAnimationFrame(() => {
           this.zone.run(() => {
             const lineRect = line.domNode.getBoundingClientRect();
-            console.log('[hint rAF] lineRect.height:', lineRect.height, 'top:', lineRect.top);
+            // console.log('[hint rAF] lineRect.height:', lineRect.height, 'top:', lineRect.top);
             if (!lineRect.height) { this.lineHintVisible.set(false); return; }
             this.lineHintPosition.set({
               top: lineRect.top + (lineRect.height - 16) / 2,
