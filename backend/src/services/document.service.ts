@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
-import { ContentDocument, IDocument, Workspace } from '../models';
+import { ContentDocument, IDocument, Workspace, User } from '../models';
 import { ApiError } from '../utils/apiError';
+import { sendCollaboratorInvite } from '../utils/email';
+import { config } from '../config';
 import {
   CreateDocumentInput,
   UpdateDocumentInput,
@@ -191,6 +193,26 @@ class DocumentService {
     return document;
   }
 
+  async updateCollaboratorRole(
+    documentId: string,
+    ownerId: string,
+    targetUserId: string,
+    role: 'editor' | 'viewer'
+  ): Promise<IDocument> {
+    const document = await ContentDocument.findById(documentId);
+    if (!document) throw ApiError.notFound('Document not found');
+    if (document.owner.toString() !== ownerId) {
+      throw ApiError.forbidden('Only the document owner can change roles');
+    }
+    const collaborator = document.collaborators.find(
+      (c) => c.userId.toString() === targetUserId
+    );
+    if (!collaborator) throw ApiError.notFound('Collaborator not found');
+    collaborator.role = role;
+    await document.save();
+    return document;
+  }
+
   async removeCollaborator(
     documentId: string,
     ownerId: string,
@@ -212,6 +234,50 @@ class DocumentService {
 
     await document.save();
     return document;
+  }
+
+  async inviteByEmail(
+    documentId: string,
+    ownerId: string,
+    email: string,
+    role: 'editor' | 'viewer'
+  ): Promise<{ added: boolean }> {
+    const document = await ContentDocument.findById(documentId)
+      .populate('owner', 'name email');
+
+    if (!document) throw ApiError.notFound('Document not found');
+    if (document.owner.toString() !== ownerId && (document.owner as any)?._id?.toString() !== ownerId) {
+      throw ApiError.forbidden('Only the document owner can invite collaborators');
+    }
+
+    const owner = document.owner as any;
+    const inviterName = owner?.name ?? 'Someone';
+    const documentUrl = `${config.frontendUrl}/editor/${documentId}`;
+
+    const existingUser = await User.findOne({ email: email.toLowerCase() }).select('_id name');
+    let added = false;
+
+    if (existingUser) {
+      const alreadyCollaborator = document.collaborators.some(
+        (c) => c.userId.toString() === existingUser._id.toString()
+      );
+      if (!alreadyCollaborator) {
+        document.collaborators.push({ userId: existingUser._id as mongoose.Types.ObjectId, role });
+        await document.save();
+        added = true;
+      }
+    }
+
+    await sendCollaboratorInvite({
+      to: email,
+      inviterName,
+      documentTitle: document.title,
+      role,
+      documentUrl,
+      isNewUser: !existingUser,
+    }).catch(() => {/* non-blocking */});
+
+    return { added };
   }
 
   private async checkDocumentAccess(

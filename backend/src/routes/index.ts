@@ -5,6 +5,7 @@ import documentRoutes from './document.routes';
 import commentRoutes from './comment.routes';
 import aiRoutes from './ai.routes';
 import analyticsRoutes from './analytics.routes';
+import userRoutes from './user.routes';
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use('/documents', documentRoutes);
 router.use('/comments', commentRoutes);
 router.use('/ai', aiRoutes);
 router.use('/analytics', analyticsRoutes);
+router.use('/users', userRoutes);
 
 export default router;

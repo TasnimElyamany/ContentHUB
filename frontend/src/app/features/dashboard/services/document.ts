@@ -7,7 +7,7 @@ import {
   Document,
   CreateDocumentRequest,
   UpdateDocumentRequest,
-  Collaborator,
+  UserSearchResult,
 } from '../../../models/document.model';
 
 interface ApiResponse<T> {
@@ -94,10 +94,45 @@ export class DocumentService {
       .pipe(map((response) => response.data));
   }
 
+  updateCollaboratorRole(
+    documentId: string,
+    userId: string,
+    role: 'editor' | 'viewer'
+  ): Observable<Document> {
+    return this.http
+      .put<ApiResponse<Document>>(
+        `${this.API_URL}/${documentId}/collaborators/${userId}`,
+        { role }
+      )
+      .pipe(map((response) => response.data));
+  }
+
   removeCollaborator(documentId: string, userId: string): Observable<Document> {
     return this.http
       .delete<ApiResponse<Document>>(
         `${this.API_URL}/${documentId}/collaborators/${userId}`
+      )
+      .pipe(map((response) => response.data));
+  }
+
+  inviteByEmail(
+    documentId: string,
+    email: string,
+    role: 'editor' | 'viewer'
+  ): Observable<{ added: boolean }> {
+    return this.http
+      .post<ApiResponse<{ added: boolean }>>(
+        `${this.API_URL}/${documentId}/invite-email`,
+        { email, role }
+      )
+      .pipe(map((response) => response.data));
+  }
+
+  searchUsers(q: string): Observable<UserSearchResult[]> {
+    return this.http
+      .get<ApiResponse<UserSearchResult[]>>(
+        `${environment.apiUrl}/users/search`,
+        { params: { q } }
       )
       .pipe(map((response) => response.data));
   }

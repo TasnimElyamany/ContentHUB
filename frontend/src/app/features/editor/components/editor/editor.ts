@@ -25,6 +25,8 @@ import {
   ConfirmDialogComponent,
   ConfirmDialogData,
 } from '../../../../shared/components/confirm-dialog/confirm-dialog';
+import { ShareDialog, ShareDialogData } from '../share-dialog/share-dialog';
+import { Auth } from '../../../../core/services/auth';
 
 @Component({
   selector: 'app-editor',
@@ -45,6 +47,7 @@ import {
     AiPanel,
     TextSelectionToolbar,
     SlashCommandPalette,
+    ShareDialog,
   ],
   templateUrl: './editor.html',
   styleUrl: './editor.scss',
@@ -55,6 +58,7 @@ export class Editor implements OnInit, OnDestroy {
   private documentService = inject(DocumentService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+  private auth = inject(Auth);
 
   @ViewChild(AiPanel) aiPanelRef?: AiPanel;
 
@@ -356,6 +360,7 @@ export class Editor implements OnInit, OnDestroy {
 
   //publish / unpublish
   // we will modify this soon to be production ready
+  // reminder for meee
 
   publishDocument(): void {
     const doc = this.document();
@@ -396,6 +401,19 @@ export class Editor implements OnInit, OnDestroy {
 
   shareDocument(): void {
     this.snackBar.open('Share via email - coming soon!', 'Close', { duration: 3000 });
+  }
+
+  openShareDialog(): void {
+    const doc = this.document();
+    if(!doc) return;
+    this.dialog.open(ShareDialog, {
+    data:{
+      document: doc,
+      currentUserId: this.auth.currentUserValue?._id ?? '',
+    } satisfies ShareDialogData,
+    width: '560px',
+    panelClass: 'share-dialog-panel'
+    })
   }
 
   // comments

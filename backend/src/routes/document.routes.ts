@@ -6,6 +6,8 @@ import {
   updateDocument,
   deleteDocument,
   addCollaborator,
+  inviteByEmail,
+  updateCollaboratorRole,
   removeCollaborator,
 } from '../controllers/document.controller';
 import { authenticate } from '../middleware/auth.middleware';
@@ -30,6 +32,8 @@ router.put('/:id', validate(updateDocumentSchema), updateDocument);
 router.delete('/:id', validate(documentIdSchema), deleteDocument);
 
 router.post('/:id/collaborators', validate(addCollaboratorSchema), addCollaborator);
+router.post('/:id/invite-email', inviteByEmail);
+router.put('/:id/collaborators/:userId', updateCollaboratorRole);
 router.delete(
   '/:id/collaborators/:userId',
   validate(removeCollaboratorSchema),

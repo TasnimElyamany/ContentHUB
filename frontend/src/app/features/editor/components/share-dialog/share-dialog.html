@@ -1,0 +1,165 @@
+<div class="share-header" mat-dialog-title>
+  <mat-icon class="share-icon">group</mat-icon>
+  <span>Share "{{ data.document.title }}"</span>
+  <button mat-icon-button class="close-btn" (click)="close()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<mat-dialog-content class="share-content">
+
+  <!-- Invite section -->
+  <div class="invite-section">
+    <p class="section-label">Invite people</p>
+    <div class="invite-row">
+      <div class="search-wrap">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input
+          class="search-input"
+          placeholder="Search by name or email..."
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event); onSearchInput()"
+          autocomplete="off">
+        @if (isSearching()) {
+          <mat-spinner class="search-spinner" diameter="16"></mat-spinner>
+        }
+        @if (selectedUser()) {
+          <button mat-icon-button class="clear-btn" (click)="clearSelection()">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </div>
+      <mat-select class="role-select" [ngModel]="selectedRole()" (ngModelChange)="selectedRole.set($event)">
+        <mat-option value="editor">Editor</mat-option>
+        <mat-option value="viewer">Viewer</mat-option>
+      </mat-select>
+      <button
+        mat-flat-button
+        class="add-btn"
+        [disabled]="!selectedUser() || isAdding()"
+        (click)="add()">
+        @if (isAdding() && selectedUser()) {
+          <mat-spinner diameter="16"></mat-spinner>
+        } @else {
+          Add
+        }
+      </button>
+    </div>
+
+    <!-- Search results -->
+    @if (searchResults().length > 0) {
+      <div class="search-results">
+        @for (user of searchResults(); track user._id) {
+          <button class="result-item" (mousedown)="selectUser(user)">
+            <div class="result-avatar">
+              @if (user.avatar) {
+                <img [src]="user.avatar" [alt]="user.name">
+              } @else {
+                <mat-icon>account_circle</mat-icon>
+              }
+            </div>
+            <div class="result-info">
+              <span class="result-name">{{ user.name }}</span>
+              <span class="result-email">{{ user.email }}</span>
+            </div>
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Email invite fallback -->
+    @if (canInviteByEmail()) {
+      <div class="email-invite-hint">
+        <mat-icon>mail_outline</mat-icon>
+        <span>No account found — send an invite to <strong>{{ searchQuery() }}</strong></span>
+        <button
+          mat-stroked-button
+          class="invite-email-btn"
+          [disabled]="isAdding()"
+          (click)="inviteByEmail()">
+          @if (isAdding()) {
+            <mat-spinner diameter="14"></mat-spinner>
+          } @else {
+            Send invite
+          }
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- Copy link -->
+  <div class="link-section">
+    <p class="section-label">Share link</p>
+    <div class="link-mode-toggle">
+      <button class="mode-btn" [class.active]="linkRole() === 'editor'" (click)="linkRole.set('editor')">
+        <mat-icon>edit</mat-icon> Editor
+      </button>
+      <button class="mode-btn" [class.active]="linkRole() === 'viewer'" (click)="linkRole.set('viewer')">
+        <mat-icon>visibility</mat-icon> Viewer
+      </button>
+    </div>
+    <div class="link-row">
+      <span class="link-text">{{ shareLink() }}</span>
+      <button mat-flat-button class="copy-btn" (click)="copyLink()">
+        <mat-icon>content_copy</mat-icon> Copy
+      </button>
+    </div>
+  </div>
+
+  <!-- People with access -->
+  <div class="access-section">
+    <p class="section-label">People with access</p>
+
+    <!-- Owner -->
+    <div class="access-item">
+      <div class="access-avatar">
+        @if (owner.avatar) {
+          <img [src]="owner.avatar" [alt]="owner.name">
+        } @else {
+          <mat-icon>account_circle</mat-icon>
+        }
+      </div>
+      <div class="access-info">
+        <span class="access-name">{{ owner.name }} <span class="you-tag">(you)</span></span>
+        <span class="access-email">{{ owner.email }}</span>
+      </div>
+      <span class="role-badge owner-badge">Owner</span>
+    </div>
+
+    <!-- Collaborators -->
+    @for (collab of collaborators(); track collab.userId) {
+      <div class="access-item">
+        <div class="access-avatar">
+          @if (collab.user.avatar) {
+            <img [src]="collab.user.avatar" [alt]="collab.user.name">
+          } @else {
+            <mat-icon>account_circle</mat-icon>
+          }
+        </div>
+        <div class="access-info">
+          <span class="access-name">{{ collab.user.name }}</span>
+          <span class="access-email">{{ collab.user.email }}</span>
+        </div>
+        <mat-select
+          class="role-select inline-role"
+          [ngModel]="collab.role"
+          (ngModelChange)="updateRole(collab, $event)">
+          <mat-option value="editor">Editor</mat-option>
+          <mat-option value="viewer">Viewer</mat-option>
+        </mat-select>
+        <button mat-icon-button class="remove-btn" matTooltip="Remove" (click)="remove(collab)">
+          <mat-icon>person_remove</mat-icon>
+        </button>
+      </div>
+    }
+
+    @if (collaborators().length === 0) {
+      <p class="no-collaborators">No collaborators yet. Invite people above.</p>
+    }
+  </div>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Done</button>
+</mat-dialog-actions>
