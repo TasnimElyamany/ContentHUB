@@ -35,7 +35,7 @@ export class SlashCommandPalette implements OnChanges, OnDestroy {
   private slashIndex = -1;
   private textChangeHandler = this.onTextChange.bind(this);
   private keydownHandler = this.onKeydown.bind(this);
-  private cursorMoveHandler = this.onCursorMove.bind(this);
+  private docSelectionHandler = this.onDocSelection.bind(this);
 
   readonly commands: Command[] = [
     { key: 'ask-ai',        group: 'AI',      icon: 'auto_awesome',         label: 'Ask AI',          desc: 'Generate content with AI'    },
@@ -78,22 +78,22 @@ export class SlashCommandPalette implements OnChanges, OnDestroy {
       const prev = changes['quillInstance'].previousValue;
       if (prev) {
         prev.off('text-change', this.textChangeHandler);
-        prev.root.removeEventListener('keydown', this.keydownHandler);
+        prev.off('selection-change', this.docSelectionHandler);
+        document.removeEventListener('keydown', this.keydownHandler, true);
       }
       if (this.quillInstance) {
+        // console.log('[SlashPalette] quillInstance received, registering listeners');
         this.quillInstance.on('text-change', this.textChangeHandler);
-        this.quillInstance.root.addEventListener('mouseup', this.cursorMoveHandler);
-        this.quillInstance.root.addEventListener('keyup', this.cursorMoveHandler);
-        this.quillInstance.root.addEventListener('keydown', this.keydownHandler, true);
+        this.quillInstance.on('selection-change', this.docSelectionHandler);
+        document.addEventListener('keydown', this.keydownHandler, true);
       }
     }
   }
 
   ngOnDestroy(): void {
     this.quillInstance?.off('text-change', this.textChangeHandler);
-    this.quillInstance?.root.removeEventListener('mouseup', this.cursorMoveHandler);
-    this.quillInstance?.root.removeEventListener('keyup', this.cursorMoveHandler);
-    this.quillInstance?.root.removeEventListener('keydown', this.keydownHandler, true);
+    this.quillInstance?.off('selection-change', this.docSelectionHandler);
+    document.removeEventListener('keydown', this.keydownHandler, true);
   }
 
   private onTextChange(_delta: any, _old: any, source: string): void {
@@ -102,59 +102,70 @@ export class SlashCommandPalette implements OnChanges, OnDestroy {
     setTimeout(() => {
       this.zone.run(() => {
         const sel = this.quillInstance?.getSelection();
-        if (!sel) { this.isVisible.set(false); return; }
+        if (!sel) { this.isVisible.set(false); this.lineHintVisible.set(false); return; }
 
         const textBefore = this.quillInstance.getText(0, sel.index);
         const lastSlash = textBefore.lastIndexOf('/');
 
-        if (lastSlash === -1) { this.isVisible.set(false); return; }
+        if (lastSlash !== -1) {
+          const between = textBefore.slice(lastSlash + 1);
+          if (!between.includes(' ') && !between.includes('\n')) {
+            this.slashIndex = lastSlash;
+            this.searchQuery.set(between.toLowerCase());
+            this.selectedIndex.set(0);
+            const bounds = this.quillInstance.getBounds(lastSlash);
+            const editorRect = this.quillInstance.root.getBoundingClientRect();
+            this.position.set({ top: editorRect.top + bounds.top + bounds.height + 6, left: editorRect.left + bounds.left });
+            this.isVisible.set(true);
+            this.lineHintVisible.set(false);
+            return;
+          }
+        }
 
-        const between = textBefore.slice(lastSlash + 1);
-        if (between.includes(' ') || between.includes('\n')) { this.isVisible.set(false); return; }
+        this.isVisible.set(false);
 
-        this.slashIndex = lastSlash;
-        this.searchQuery.set(between.toLowerCase());
-        this.selectedIndex.set(0);
-
-        const bounds = this.quillInstance.getBounds(lastSlash);
-        const editorRect = this.quillInstance.root.getBoundingClientRect();
-        this.position.set({
-          top: editorRect.top + bounds.top + bounds.height + 6,
-          left: editorRect.left + bounds.left,
-        });
-        this.isVisible.set(true);
-      });
-    }, 0);
-  }
-
-  private onCursorMove(): void {
-    setTimeout(() => {
-      this.zone.run(() => {
-        if (this.isVisible()) { this.lineHintVisible.set(false); return; }
-        const sel = this.quillInstance?.getSelection();
-        if (!sel || sel.length > 0) { this.lineHintVisible.set(false); return; }
-        const [line, offset] = this.quillInstance.getLine(sel.index);
-        const lineStart = sel.index - offset;
-        const lineText = this.quillInstance.getText(lineStart, (line?.length() ?? 1) - 1);
-        if (lineText.length > 0) { this.lineHintVisible.set(false); return; }
-        const bounds = this.quillInstance.getBounds(sel.index);
-        const r = this.quillInstance.root.getBoundingClientRect();
+        const [line] = this.quillInstance.getLine(sel.index);
+        if (!line || (line.length() ?? 1) > 1) { this.lineHintVisible.set(false); return; }
+        const lineRect = line.domNode.getBoundingClientRect();
+        if (!lineRect.height) { this.lineHintVisible.set(false); return; }
         this.lineHintPosition.set({
-          top: r.top + bounds.top + (bounds.height - 16) / 2,
-          left: r.left + bounds.left + 2,
+          top: lineRect.top + (lineRect.height - 16) / 2,
+          left: lineRect.left + 2,
         });
         this.lineHintVisible.set(true);
       });
     }, 0);
   }
 
+  private onDocSelection(range: any): void {
+    if (!range || range.length > 0 || this.isVisible()) {
+      this.zone.run(() => this.lineHintVisible.set(false));
+      return;
+    }
+    requestAnimationFrame(() => {
+      this.zone.run(() => {
+        if (this.isVisible()) { this.lineHintVisible.set(false); return; }
+        const [line] = this.quillInstance.getLine(range.index);
+        if (!line || (line.length() ?? 1) > 1) { this.lineHintVisible.set(false); return; }
+        const lineRect = line.domNode.getBoundingClientRect();
+        if (!lineRect.height) { this.lineHintVisible.set(false); return; }
+        this.lineHintPosition.set({
+          top: lineRect.top + (lineRect.height - 16) / 2,
+          left: lineRect.left + 2,
+        });
+        this.lineHintVisible.set(true);
+      });
+    });
+  }
+
   private onKeydown(e: KeyboardEvent): void {
+    if (!this.quillInstance?.hasFocus()) return;
     if (!this.isVisible()) return;
     const total = this.filteredCommands().length;
     this.zone.run(() => {
       if (e.key === 'ArrowDown')  { e.preventDefault(); this.selectedIndex.update(i => (i + 1) % total); }
       else if (e.key === 'ArrowUp')   { e.preventDefault(); this.selectedIndex.update(i => (i - 1 + total) % total); }
-      else if (e.key === 'Enter')     { e.preventDefault(); const cmd = this.filteredCommands()[this.selectedIndex()]; if (cmd) this.executeCommand(cmd); }
+      else if (e.key === 'Enter')     { e.preventDefault(); console.log('[SlashPalette] Enter intercepted, slashIndex:', this.slashIndex); const cmd = this.filteredCommands()[this.selectedIndex()]; if (cmd) this.executeCommand(cmd); }
       else if (e.key === 'Escape')    { this.isVisible.set(false); }
     });
   }

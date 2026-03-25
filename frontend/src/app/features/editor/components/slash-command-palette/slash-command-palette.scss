@@ -1,12 +1,20 @@
 .line-hint {
   position: fixed;
+  z-index: 999;
   pointer-events: none;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-style: italic;
-  color: rgba(122, 107, 90, 0.3);
+  font-weight: 400;
+  color: rgba(122, 107, 90, 0.28);
   white-space: nowrap;
-  font-family: 'Georgia', serif;
-  line-height: 1.8;
+  font-family: inherit;
+  line-height: 1;
+  animation: hint-fade-in 0.18s ease;
+}
+
+@keyframes hint-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .slash-palette {

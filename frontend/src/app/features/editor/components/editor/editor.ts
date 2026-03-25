@@ -221,7 +221,6 @@ export class Editor implements OnInit, OnDestroy {
       .subscribe({
         next: (updatedDoc) => {
           this.document.set(updatedDoc);
-          this.content.set(liveContent); // keep signal in sync after a successful save
           this.saveStatus.set('saved');
         },
         error: (err) => {
