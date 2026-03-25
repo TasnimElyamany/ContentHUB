@@ -275,7 +275,7 @@ class DocumentService {
       role,
       documentUrl,
       isNewUser: !existingUser,
-    }).catch(() => {/* non-blocking */});
+    }).catch((err) => { console.error('[email] sendCollaboratorInvite failed:', err); });
 
     return { added };
   }

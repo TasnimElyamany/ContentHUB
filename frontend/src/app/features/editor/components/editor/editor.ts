@@ -26,6 +26,7 @@ import {
   ConfirmDialogData,
 } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { ShareDialog, ShareDialogData } from '../share-dialog/share-dialog';
+import { EmailShareDialog, EmailShareDialogData } from '../email-share-dialog/email-share-dialog';
 import { Auth } from '../../../../core/services/auth';
 
 @Component({
@@ -48,6 +49,7 @@ import { Auth } from '../../../../core/services/auth';
     TextSelectionToolbar,
     SlashCommandPalette,
     ShareDialog,
+    EmailShareDialog,
   ],
   templateUrl: './editor.html',
   styleUrl: './editor.scss',
@@ -400,7 +402,12 @@ export class Editor implements OnInit, OnDestroy {
   }
 
   shareDocument(): void {
-    this.snackBar.open('Share via email - coming soon!', 'Close', { duration: 3000 });
+    const doc = this.document();
+    if (!doc) return;
+    this.dialog.open(EmailShareDialog, {
+      data: { document: doc } satisfies EmailShareDialogData,
+      width: '460px',
+    });
   }
 
   openShareDialog(): void {

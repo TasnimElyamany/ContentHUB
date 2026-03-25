@@ -1,0 +1,54 @@
+<div class="dialog-header" mat-dialog-title>
+  <mat-icon class="header-icon">email</mat-icon>
+  <span>Share by email</span>
+  <button mat-icon-button class="close-btn" (click)="close()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<mat-dialog-content class="dialog-content">
+  <p class="doc-title">
+    <mat-icon>description</mat-icon>
+    {{ data.document.title }}
+  </p>
+
+  <div class="field-group">
+    <label class="field-label">To</label>
+    <textarea
+      class="to-input"
+      rows="3"
+      placeholder="Enter email addresses separated by commas..."
+      [ngModel]="toField()"
+      (ngModelChange)="toField.set($event)">
+    </textarea>
+    <p class="field-hint">Separate multiple addresses with commas or new lines.</p>
+  </div>
+
+  <div class="field-group">
+    <label class="field-label">Access</label>
+    <div class="role-pills">
+      <button class="role-pill" [class.active]="role() === 'viewer'" (click)="role.set('viewer')">
+        <mat-icon>visibility</mat-icon> Viewer
+      </button>
+      <button class="role-pill" [class.active]="role() === 'editor'" (click)="role.set('editor')">
+        <mat-icon>edit</mat-icon> Editor
+      </button>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Cancel</button>
+  <button
+    mat-flat-button
+    class="send-btn"
+    [disabled]="!isValid || isSending()"
+    (click)="send()">
+    @if (isSending()) {
+      <mat-spinner diameter="18"></mat-spinner>
+    } @else {
+      <mat-icon>send</mat-icon>
+      Send invite{{ emails.length > 1 ? 's' : '' }}
+    }
+  </button>
+</mat-dialog-actions>

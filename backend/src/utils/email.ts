@@ -9,6 +9,9 @@ const transporter = nodemailer.createTransport({
     user: config.email.user,
     pass: config.email.pass,
   },
+  tls: {
+    rejectUnauthorized: false,
+  },
 });
 
 export async function sendCollaboratorInvite(options: {
