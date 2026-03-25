@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, HostListener, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -19,6 +19,8 @@ import { DocumentService } from '../../../dashboard/services/document';
 import { Document } from '../../../../models/document.model';
 import { CommentsSidebar } from '../comments-sidebar/comments-sidebar';
 import { AiPanel } from '../ai-panel/ai-panel';
+import { TextSelectionToolbar } from '../text-selection-toolbar/text-selection-toolbar';
+import { SlashCommandPalette } from '../slash-command-palette/slash-command-palette';
 import {
   ConfirmDialogComponent,
   ConfirmDialogData,
@@ -41,6 +43,8 @@ import {
     MatMenuModule,
     CommentsSidebar,
     AiPanel,
+    TextSelectionToolbar,
+    SlashCommandPalette,
   ],
   templateUrl: './editor.html',
   styleUrl: './editor.scss',
@@ -51,6 +55,8 @@ export class Editor implements OnInit, OnDestroy {
   private documentService = inject(DocumentService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+
+  @ViewChild(AiPanel) aiPanelRef?: AiPanel;
 
   private destroy$ = new Subject<void>();
   private saveSubject$ = new Subject<void>();
@@ -182,9 +188,6 @@ export class Editor implements OnInit, OnDestroy {
   }
 
   OnContentChanged(_event: any): void {
-    // Do NOT update the content signal here — doing so causes a feedback loop:
-    // content.set() → [ngModel] updates → ngx-quill writeValue → text-change → ngModelChange → repeat.
-    // The debounce timer would never fire. Instead, read live content from the Quill instance.
     this.saveStatus.set('unsaved');
     this.saveSubject$.next();
   }
@@ -218,7 +221,6 @@ export class Editor implements OnInit, OnDestroy {
       .subscribe({
         next: (updatedDoc) => {
           this.document.set(updatedDoc);
-          this.content.set(liveContent); // keep signal in sync after a successful save
           this.saveStatus.set('saved');
         },
         error: (err) => {
@@ -352,7 +354,8 @@ export class Editor implements OnInit, OnDestroy {
     return name.replace(/[^a-z0-9_\- ]/gi, '_').trim() || 'document';
   }
 
-  // ─── Publish ───────────────────────────────────────────────────────────────
+  //publish / unpublish
+  // we will modify this soon to be production ready
 
   publishDocument(): void {
     const doc = this.document();
@@ -383,7 +386,7 @@ export class Editor implements OnInit, OnDestroy {
     });
   }
 
-  // ─── Share ─────────────────────────────────────────────────────────────────
+  // share
 
   copyDocumentLink(): void {
     navigator.clipboard.writeText(window.location.href).then(() => {
@@ -395,7 +398,7 @@ export class Editor implements OnInit, OnDestroy {
     this.snackBar.open('Share via email - coming soon!', 'Close', { duration: 3000 });
   }
 
-  // ─── Comments ──────────────────────────────────────────────────────────────
+  // comments
 
   toggleComments(): void {
     this.showComments.update((v) => !v);
@@ -405,7 +408,31 @@ export class Editor implements OnInit, OnDestroy {
     this.commentCount.set(count);
   }
 
-  // ─── AI Panel ──────────────────────────────────────────────────────────────
+  // AI panel
+
+  onSlashCommand(event: { command: string }): void {
+    this.quickstartAI(event.command);
+  }
+
+  onSelectionAction(event: { action: string; text: string; range: { index: number; length: number } }): void {
+    this.showAIPanel.set(true);
+    setTimeout(() => this.aiPanelRef?.triggerEnhance(event.action, event.text, event.range), 0);
+  }
+
+  quickstartAI(type: string): void {
+    this.showAIPanel.set(true);
+    const configs: Record<string, { tab: 'generate' | 'research'; prompt?: string }> = {
+      'ask':           { tab: 'generate' },
+      'meeting-notes': { tab: 'generate', prompt: 'Generate structured meeting notes with agenda, attendees, discussion points, and action items.' },
+      'research':      { tab: 'research' },
+      'content-brief': { tab: 'generate', prompt: `Create a content brief for "${this.title()}" including target audience, key messages, tone, and outline.` },
+      'outline':       { tab: 'generate', prompt: `Create a detailed outline for "${this.title()}".` },
+      'summarize':     { tab: 'generate', prompt: 'Provide a concise summary of this document.' },
+    };
+    const config = configs[type];
+    if (!config) return;
+    setTimeout(() => this.aiPanelRef?.triggerQuickstart(config.tab, config.prompt), 0);
+  }
 
   toggleAIPanel(): void {
     this.showAIPanel.update((v) => !v);
@@ -416,13 +443,13 @@ export class Editor implements OnInit, OnDestroy {
     this.saveSubject$.next();
   }
 
-  // ─── Navigation ────────────────────────────────────────────────────────────
+  // navigation back
 
   goBack(): void {
     this.router.navigate(['/dashboard']);
   }
 
-  // ─── Stats ─────────────────────────────────────────────────────────────────
+  // stats for doc
 
   get wordCount(): number {
     const text = (this.quillInstance?.root.innerHTML ?? this.content()).replace(/<[^>]*>/g, '');

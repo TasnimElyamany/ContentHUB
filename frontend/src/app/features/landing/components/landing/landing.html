@@ -40,11 +40,11 @@
       <div class="hero-actions">
         <button mat-raised-button class="cta-button" routerLink="/auth/register">
           <mat-icon>rocket_launch</mat-icon>
-          Start Writing for Free
+          <span>Start Writing for Free</span>
         </button>
         <button mat-stroked-button class="demo-button">
           <mat-icon>play_circle</mat-icon>
-          Watch Demo
+          <span>Watch Demo</span>
         </button>
       </div>
 
@@ -84,6 +84,7 @@
 
   <section class="features">
     <div class="section-header">
+      <p class="section-eyebrow">Why ContentHub</p>
       <h2 class="section-title">Everything You Need to Create Amazing Content</h2>
       <p class="section-subtitle">
         Powerful features designed to supercharge your content creation workflow
@@ -91,18 +92,15 @@
     </div>
 
     <div class="features-grid">
-      @for (feature of features; track feature.title) {
-        <mat-card class="feature-card">
-          <div class="feature-icon-wrapper" [style.background]="feature.color + '15'">
+      @for (feature of features; track feature.title; let i = $index) {
+        <div class="feature-card">
+          <span class="feature-number">{{ (i + 1).toString().padStart(2, '0') }}</span>
+          <div class="feature-icon-wrapper" [style.background]="feature.color + '18'">
             <mat-icon class="feature-icon" [style.color]="feature.color">{{ feature.icon }}</mat-icon>
           </div>
-          <mat-card-header>
-            <mat-card-title>{{ feature.title }}</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <p>{{ feature.description }}</p>
-          </mat-card-content>
-        </mat-card>
+          <h3 class="feature-title">{{ feature.title }}</h3>
+          <p class="feature-desc">{{ feature.description }}</p>
+        </div>
       }
     </div>
   </section>

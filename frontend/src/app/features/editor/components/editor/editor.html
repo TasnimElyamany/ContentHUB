@@ -6,7 +6,7 @@
     </button>
 
     <div class="title-group">
-      <mat-icon class="title-icon">description</mat-icon>
+      <mat-icon class="title-icon">history_edu</mat-icon>
       <input
         [ngModel]="title()"
         (ngModelChange)="title.set($event); OnTitleChanged()"
@@ -117,13 +117,60 @@
 
     <!-- Editor -->
     <div class="editor-main">
+      <!-- Floating text selection toolbar -->
+      <app-text-selection-toolbar
+        [quillInstance]="quillInstance"
+        (actionTriggered)="onSelectionAction($event)">
+      </app-text-selection-toolbar>
+
+      <app-slash-command-palette
+        [quillInstance]="quillInstance"
+        (commandSelected)="onSlashCommand($event)">
+      </app-slash-command-palette>
+
+      <div class="ai-quickstart">
+        <span class="quickstart-label">
+          <mat-icon>auto_awesome</mat-icon>
+          Quick actions
+        </span>
+        <div class="quickstart-chips">
+          <button class="quickstart-chip chip-ai" (click)="quickstartAI('ask')">
+            <mat-icon>auto_awesome</mat-icon><span>Ask AI</span>
+          </button>
+          <button class="quickstart-chip chip-ai" (click)="quickstartAI('meeting-notes')">
+            <mat-icon>mic</mat-icon><span>Meeting Notes</span>
+          </button>
+          <button class="quickstart-chip chip-ai" (click)="quickstartAI('research')">
+            <mat-icon>search</mat-icon><span>Research</span>
+          </button>
+          <button class="quickstart-chip chip-doc" (click)="quickstartAI('content-brief')">
+            <mat-icon>article</mat-icon><span>Content Brief</span>
+          </button>
+          <button class="quickstart-chip chip-doc" (click)="quickstartAI('outline')">
+            <mat-icon>format_list_bulleted</mat-icon><span>Outline</span>
+          </button>
+          <button class="quickstart-chip chip-doc" (click)="quickstartAI('summarize')">
+            <mat-icon>summarize</mat-icon><span>Summarize</span>
+          </button>
+        </div>
+      </div>
+
       <div class="editor-wrapper">
+        @if (wordCount === 0) {
+          <div class="editor-guide">
+            <div class="guide-icon-wrap">
+              <mat-icon class="guide-icon">history_edu</mat-icon>
+            </div>
+            <h2 class="guide-heading">What are you working on?</h2>
+            <p class="guide-subtitle">Start writing, or use a Quick Action above<br>to generate content with AI.</p>
+          </div>
+        }
         <quill-editor
           [ngModel]="content()"
           (ngModelChange)="OnContentChanged({html: $event})"
           (onEditorCreated)="onEditorCreated($event)"
           [modules]="quillModules"
-          placeholder="Start writing your amazing content..."
+          placeholder=""
           class="quill-editor">
         </quill-editor>
       </div>

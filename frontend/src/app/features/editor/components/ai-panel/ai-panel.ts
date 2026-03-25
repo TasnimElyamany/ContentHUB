@@ -289,6 +289,42 @@ export class AiPanel implements OnInit {
     });
   }
 
+  triggerQuickstart(tab: 'generate' | 'research', prompt?: string): void {
+    this.aiPanelTab.set(tab);
+    if (tab === 'generate' && prompt) {
+      this.aiPrompt.set(prompt);
+    }
+    if (tab === 'research') {
+      this.researchMode.set('ask');
+    }
+  }
+
+  triggerEnhance(action: string, text: string, range: { index: number; length: number }): void {
+    this.aiPanelTab.set('enhance');
+    this.selectedText.set(text);
+    this.selectionRange = range;
+    this.isAIProcessing.set(true);
+    this.aiResult.set('');
+    this.aiError.set('');
+
+    this.aiService.enhance({
+      text,
+      action: action as any,
+      tone: action === 'tone' ? (this.aiTone() as any) : undefined,
+      documentId: this.documentId,
+    }).subscribe({
+      next: (response) => {
+        this.aiResult.set(response.result);
+        this.aiCreditsRemaining.set(response.creditsRemaining);
+        this.isAIProcessing.set(false);
+      },
+      error: (err) => {
+        this.aiError.set(err.error?.error || err.error?.message || 'AI enhancement failed.');
+        this.isAIProcessing.set(false);
+      },
+    });
+  }
+
   replaceSelectedText(): void {
     if (!this.aiResult() || !this.quillInstance || !this.selectionRange) return;
     const { index, length } = this.selectionRange;

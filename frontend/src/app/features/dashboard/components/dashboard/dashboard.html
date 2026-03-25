@@ -285,6 +285,12 @@
                       <mat-icon>edit</mat-icon>
                       <span>Open</span>
                     </button>
+                    @if (doc.status === 'published') {
+                      <button mat-menu-item (click)="unpublishDocument(doc._id, $event)">
+                        <mat-icon>public_off</mat-icon>
+                        <span>Unpublish</span>
+                      </button>
+                    }
                     <mat-divider></mat-divider>
                     <button mat-menu-item class="delete-item" (click)="deleteDocument(doc._id, $event)">
                       <mat-icon>delete_outline</mat-icon>

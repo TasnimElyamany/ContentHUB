@@ -12,7 +12,7 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--color-surface-elevated) !important;
+  background: var(--color-sidebar) !important;
   color: var(--color-text-primary) !important;
   border-bottom: 1px solid var(--color-border);
   padding: 0 0.5rem;
@@ -114,8 +114,9 @@
       &:hover { background: var(--color-hover); border-color: var(--color-border); }
 
       &.selected {
-        border-color: var(--color-primary);
-        background: var(--color-primary-selected);
+        border-color: var(--color-accent);
+        background: rgba(196, 124, 56, 0.1);
+        box-shadow: 0 0 0 1px rgba(196, 124, 56, 0.3);
       }
     }
   }
@@ -166,11 +167,12 @@
   margin-bottom: 1.5rem;
 
   button {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-
-    mat-spinner { margin-right: 0.25rem; }
+    ::ng-deep .mdc-button__label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    mat-spinner { flex-shrink: 0; }
   }
 }
 
@@ -206,10 +208,12 @@
     }
 
     button {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
       white-space: nowrap;
+      ::ng-deep .mdc-button__label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
     }
   }
 }
