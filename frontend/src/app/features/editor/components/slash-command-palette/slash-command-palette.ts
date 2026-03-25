@@ -126,13 +126,19 @@ export class SlashCommandPalette implements OnChanges, OnDestroy {
 
         const [line] = this.quillInstance.getLine(sel.index);
         if (!line || (line.length() ?? 1) > 1) { this.lineHintVisible.set(false); return; }
-        const lineRect = line.domNode.getBoundingClientRect();
-        if (!lineRect.height) { this.lineHintVisible.set(false); return; }
-        this.lineHintPosition.set({
-          top: lineRect.top + (lineRect.height - 16) / 2,
-          left: lineRect.left + 2,
+
+        requestAnimationFrame(() => {
+          this.zone.run(() => {
+            const lineRect = line.domNode.getBoundingClientRect();
+            console.log('[hint rAF] lineRect.height:', lineRect.height, 'top:', lineRect.top);
+            if (!lineRect.height) { this.lineHintVisible.set(false); return; }
+            this.lineHintPosition.set({
+              top: lineRect.top + (lineRect.height - 16) / 2,
+              left: lineRect.left + 2,
+            });
+            this.lineHintVisible.set(true);
+          });
         });
-        this.lineHintVisible.set(true);
       });
     }, 0);
   }
