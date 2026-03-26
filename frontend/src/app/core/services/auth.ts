@@ -47,24 +47,23 @@ export class Auth {
     return this.http.post<ApiResponse<AuthResponse>>(`${this.API_URL}/auth/login`, credentials)
       .pipe(
         map(response => response.data),
-        tap(data => {
-          this.setSession(data);
-        })
+        tap(data => this.setSession(data, credentials.rememberMe ?? false))
       );
   }
+
   register(userData: RegisterRequest): Observable<AuthResponse> {
     return this.http.post<ApiResponse<AuthResponse>>(`${this.API_URL}/auth/register`, userData)
       .pipe(
         map(response => response.data),
-        tap(data => {
-          this.setSession(data);
-        })
+        tap(data => this.setSession(data, false))
       );
   }
 
   logout(): void {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
+    sessionStorage.removeItem(this.TOKEN_KEY);
+    sessionStorage.removeItem(this.USER_KEY);
 
     this.currentUserSubject.next(null);
     this.currentUserSignal.set(null);
@@ -75,7 +74,8 @@ export class Auth {
   }
 
   getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    // check localStorage first (remember me check), fall back to sessionStorage
+    return localStorage.getItem(this.TOKEN_KEY) ?? sessionStorage.getItem(this.TOKEN_KEY);
   }
 
 //Refresh user data from server
@@ -84,7 +84,7 @@ export class Auth {
       .pipe(
         map(response => response.data),
         tap(user => {
-          localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+          this.persistUser(user);
           this.currentUserSubject.next(user);
           this.currentUserSignal.set(user);
         })
@@ -103,23 +103,27 @@ export class Auth {
     }
   }
 
-  private setSession(authResult: AuthResponse): void {
+  private persistUser(user: User): void {
+    // write back to whichever storage holds the active session now
+    const storage = localStorage.getItem(this.TOKEN_KEY) ? localStorage : sessionStorage;
+    storage.setItem(this.USER_KEY, JSON.stringify(user));
+  }
 
-    localStorage.setItem(this.TOKEN_KEY, authResult.token);
-    localStorage.setItem(this.USER_KEY, JSON.stringify(authResult.user));
-
-    // Update current user
+  private setSession(authResult: AuthResponse, rememberMe: boolean): void {
+    const storage = rememberMe ? localStorage : sessionStorage;
+    storage.setItem(this.TOKEN_KEY, authResult.token);
+    storage.setItem(this.USER_KEY, JSON.stringify(authResult.user));
     this.currentUserSubject.next(authResult.user);
     this.currentUserSignal.set(authResult.user);
   }
 
   private getUserFromStorage(): User | null {
-    const userJson = localStorage.getItem(this.USER_KEY);
+    // check localStorage first (remember me), fall back to sessionStorage
+    const userJson = localStorage.getItem(this.USER_KEY) ?? sessionStorage.getItem(this.USER_KEY);
     if (userJson) {
       try {
         return JSON.parse(userJson);
-      } catch (error) {
-        console.error('Error parsing user from localStorage:', error);
+      } catch {
         return null;
       }
     }
@@ -131,7 +135,7 @@ export class Auth {
       .pipe(
         map(response => response.data),
         tap(user => {
-          localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+          this.persistUser(user);
           this.currentUserSubject.next(user);
           this.currentUserSignal.set(user);
         })

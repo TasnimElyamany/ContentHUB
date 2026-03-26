@@ -17,9 +17,29 @@ export interface Document {
   updatedAt: Date;
 }
 
+export interface UserInfo {
+  _id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+}
+
 export interface Collaborator {
+  userId: string | UserInfo;
+  role: 'editor' | 'viewer';
+}
+
+export interface CollaboratorResolved {
   userId: string;
   role: 'editor' | 'viewer';
+  user: UserInfo;
+}
+
+export interface UserSearchResult {
+  _id: string;
+  name: string;
+  email: string;
+  avatar?: string;
 }
 
 export interface CreateDocumentRequest {

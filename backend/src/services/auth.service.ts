@@ -70,10 +70,10 @@ class AuthService {
     user.lastLogin = new Date();
     await user.save();
 
-    const token = generateToken({
-      userId: user._id.toString(),
-      email: user.email,
-    });
+    const token = generateToken(
+      { userId: user._id.toString(), email: user.email },
+      data.rememberMe ? '10d' : '1d'
+    );
 
     const userResponse = user.toObject();
     delete (userResponse as any).password;

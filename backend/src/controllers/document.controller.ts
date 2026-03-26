@@ -78,6 +78,26 @@ export const addCollaborator = asyncHandler(async (req: Request, res: Response) 
   });
 });
 
+export const inviteByEmail = asyncHandler(async (req: Request, res: Response) => {
+  const result = await documentService.inviteByEmail(
+    req.params.id,
+    req.user!.userId,
+    req.body.email,
+    req.body.role
+  );
+  res.json({ success: true, data: result });
+});
+
+export const updateCollaboratorRole = asyncHandler(async (req: Request, res: Response) => {
+  const document = await documentService.updateCollaboratorRole(
+    req.params.id,
+    req.user!.userId,
+    req.params.userId,
+    req.body.role
+  );
+  res.json({ success: true, data: document });
+});
+
 export const removeCollaborator = asyncHandler(async (req: Request, res: Response) => {
   const document = await documentService.removeCollaborator(
     req.params.id,

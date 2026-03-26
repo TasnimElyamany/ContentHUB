@@ -145,6 +145,28 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+// Mat-select dropdown panel — solid background
+.mat-mdc-select-panel {
+  background: var(--color-surface-elevated) !important;
+  border: 1px solid var(--color-border-light) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 6px 24px rgba(45, 42, 38, 0.12) !important;
+}
+
+.mat-mdc-option {
+  color: var(--color-text-primary) !important;
+
+  &:hover,
+  &.mat-mdc-option-active {
+    background: var(--color-surface-muted) !important;
+  }
+
+  &.mdc-list-item--selected:not(.mat-mdc-option-multiple) {
+    background: var(--color-ws-bg) !important;
+    color: var(--color-ws) !important;
+  }
+}
+
 // Material component overrides
 .mat-mdc-card {
   border-radius: var(--radius-lg) !important;
