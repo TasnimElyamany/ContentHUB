@@ -142,32 +142,6 @@
     background: var(--color-hover);
   }
 
-  // AI panel toggle — violet pill button
-  .ai-btn {
-    background: linear-gradient(135deg, #8668d4, #a088e0) !important;
-    color: #fff !important;
-    border-radius: 20px !important;
-    font-weight: 700;
-    font-size: 0.8rem;
-    height: 32px;
-    padding: 0 0.875rem !important;
-    gap: 0.25rem;
-    box-shadow: 0 2px 8px rgba(134, 104, 212, 0.35);
-    transition: box-shadow 150ms ease, opacity 150ms ease !important;
-
-    mat-icon { font-size: 16px; width: 16px; height: 16px; }
-    .ai-btn-text { letter-spacing: 0.02em; }
-
-    &:hover:not(.active) {
-      opacity: 0.9;
-      box-shadow: 0 4px 12px rgba(134, 104, 212, 0.45) !important;
-    }
-
-    &.active {
-      background: linear-gradient(135deg, #6448b8, #8668d4) !important;
-      box-shadow: 0 0 0 2px rgba(134, 104, 212, 0.4), 0 2px 8px rgba(134, 104, 212, 0.35) !important;
-    }
-  }
 }
 
 @keyframes pulse {
@@ -569,6 +543,48 @@
       width: 16px;
       height: 16px;
     }
+  }
+}
+
+// ─── Floating AI FAB ────────────────────────────────────────────────────────
+
+.ai-fab {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 200;
+
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+
+  background: linear-gradient(135deg, #8668d4 0%, #6448b8 100%);
+  box-shadow: 0 4px 20px rgba(100, 72, 184, 0.5), 0 2px 8px rgba(0,0,0,0.15);
+  transition: box-shadow 200ms ease, transform 200ms ease;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    box-shadow: 0 8px 32px rgba(100, 72, 184, 0.65), 0 4px 12px rgba(0,0,0,0.18);
+    transform: translateY(-3px);
+  }
+
+  &.active {
+    background: linear-gradient(135deg, #6448b8 0%, #4e37a0 100%);
+    box-shadow:
+      0 0 0 3px rgba(166, 136, 220, 0.5),
+      0 8px 28px rgba(100, 72, 184, 0.55);
+    transform: translateY(-1px);
+  }
+
+  .ai-fab-icon {
+    width: 42px;
+    height: 42px;
   }
 }
 
